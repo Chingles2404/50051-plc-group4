@@ -34,6 +34,39 @@ int getMatrixElement(Matrix *matrix, int row, int col) {
     return matrix -> data[row][col];
 }
 
+Matrix *createPaddedMatrixWithZeros(Matrix *originalMatrix, int paddingAmount) {
+    /* If paddingAmount is 1, that means we surround the original matrix with 1 layer of zero
+    Creates a new matrix */
+    Matrix *paddedMatrix;
+    int newNumberOfRows;
+    int newNumberOfCols;
+    int rowIndex;
+    int colIndex;
+
+    newNumberOfRows = originalMatrix->numberRows + paddingAmount*2;
+    newNumberOfCols = originalMatrix->numberCols + paddingAmount*2;
+
+    paddedMatrix = createMatrix(newNumberOfRows, newNumberOfCols);
+    
+
+    for (rowIndex = 0; rowIndex < newNumberOfRows; rowIndex++) {
+        for (colIndex = 0; colIndex < newNumberOfCols; colIndex++) {
+            setMatrixElement(paddedMatrix, rowIndex, colIndex, 0);
+        }
+    }
+
+    for (rowIndex = paddingAmount; rowIndex < newNumberOfRows - paddingAmount; rowIndex++) {
+        for (colIndex = paddingAmount; colIndex < newNumberOfCols - paddingAmount; colIndex++) {
+            setMatrixElement(paddedMatrix, rowIndex, colIndex, getMatrixElement(originalMatrix, rowIndex-paddingAmount, colIndex-paddingAmount));
+        }
+    }
+
+    return paddedMatrix;
+
+
+}
+
+
 void free2DArray(int ** array, int numberRows) {
     int row;
     for (row = 0; row < numberRows; row++) {
