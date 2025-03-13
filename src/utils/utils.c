@@ -66,6 +66,64 @@ Matrix *createPaddedMatrixWithZeros(Matrix *originalMatrix, int paddingAmount) {
 
 }
 
+Matrix * createMatrixWithRemovedPadding(Matrix *originalMatrix, int paddingAmountToRemove) {
+    /* If paddingAmountToRemove is 1, that means we have to remove the original matrix with 1 layer of zero
+    Creates a new matrix */
+    Matrix *removedPaddingMatrix;
+    int newNumberOfRows;
+    int newNumberOfCols;
+    int rowIndex;
+    int colIndex;
+
+    if (paddingAmountToRemove*2 >= originalMatrix->numberRows || paddingAmountToRemove*2 >= originalMatrix->numberCols) {
+        return NULL; /* NULL means error */
+    }
+
+    newNumberOfRows = originalMatrix->numberRows - paddingAmountToRemove*2;
+    newNumberOfCols = originalMatrix->numberCols - paddingAmountToRemove*2;
+
+    removedPaddingMatrix = createMatrix(newNumberOfRows, newNumberOfCols);
+    
+
+    for (rowIndex = 0; rowIndex < newNumberOfRows; rowIndex++) {
+        for (colIndex = 0; colIndex < newNumberOfCols; colIndex++) {
+            setMatrixElement(removedPaddingMatrix, rowIndex, colIndex, 
+                getMatrixElement(originalMatrix, rowIndex + paddingAmountToRemove, colIndex+paddingAmountToRemove));
+        }
+    }
+
+    return removedPaddingMatrix;
+
+}
+
+int matricesAreEqual(Matrix *firstMatrix, Matrix *secondMatrix) {
+
+    int rowIndex;
+    int columnIndex;
+
+    /* Firstly, check the metadata of the matrices 
+    */
+    if (firstMatrix->numberRows != secondMatrix->numberRows ||
+        firstMatrix->numberCols != secondMatrix->numberCols ||
+        firstMatrix->size != secondMatrix->size
+    ) {
+        return 0; /* 0 for false */
+    }
+    
+    /* Secondly, check the data of the matrices. As from the above's check, 
+    their dimensions (number of rows and columns) are the same, we can use one of the matrices' dimensions
+    */
+    for (rowIndex = 0; rowIndex < firstMatrix->numberRows; rowIndex++) {
+        for (columnIndex = 0; columnIndex < secondMatrix->numberCols; columnIndex++) {
+            if (getMatrixElement(firstMatrix, rowIndex, columnIndex) != getMatrixElement(secondMatrix, rowIndex, columnIndex)) {
+                return 0;
+            }
+        }
+    }
+
+    return 1;
+
+}
 
 void free2DArray(int ** array, int numberRows) {
     int row;
