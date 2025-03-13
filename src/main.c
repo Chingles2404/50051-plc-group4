@@ -10,6 +10,7 @@ int main(int argc, char **argv) {
     int rowIndex;
     int columnIndex;
     Matrix *paddedMatrix;
+    Matrix *removedPaddingMatrix;
     
     originalMatrix = createMatrix(3, 3);
 
@@ -29,9 +30,19 @@ int main(int argc, char **argv) {
         }
         printf("\n");
     }
+    
+    removedPaddingMatrix = createMatrixWithRemovedPadding(paddedMatrix, 1);
+    printf("Removed-Padding Matrix:\n");
+    for (rowIndex = 0; rowIndex < removedPaddingMatrix->numberRows; rowIndex++) {
+        for (columnIndex = 0; columnIndex < removedPaddingMatrix->numberCols; columnIndex++) {
+            printf("%d ", getMatrixElement(removedPaddingMatrix, rowIndex, columnIndex));
+        }
+        printf("\n");
+    }
 
     freeMatrix(originalMatrix);
     freeMatrix(paddedMatrix);
+    freeMatrix(removedPaddingMatrix);
 
     /* Just for testing - END */
 
