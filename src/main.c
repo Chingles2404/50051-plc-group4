@@ -3,18 +3,16 @@
 
 int main(int argc, char **argv) {
 
+    /* Just for testing - START. Can remove this part later onwards */
 
     Matrix *originalMatrix;
     int value;
     int rowIndex;
     int columnIndex;
     Matrix *paddedMatrix;
-
-    printf("Hi");
     
     originalMatrix = createMatrix(3, 3);
 
-    /* Testing */
     value = 1;
     for (rowIndex = 0; rowIndex < originalMatrix->numberRows; rowIndex++) {
         for (columnIndex = 0; columnIndex < originalMatrix->numberCols; columnIndex++) {
@@ -34,6 +32,11 @@ int main(int argc, char **argv) {
 
     freeMatrix(originalMatrix);
     freeMatrix(paddedMatrix);
+
+    /* Just for testing - END */
+
+    printf("Press enter to exit...");
+    getchar();
 
     return 0;
 }
