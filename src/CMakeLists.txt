@@ -6,6 +6,8 @@ In our case, utils is the library. utils.c is the source file.
 As utils.c has its own inclusion of headers in the same directory (utils.h), we can opt it out here
 ]]
 add_library(utils utils/utils.c)
+add_library(ascii ascii/main.c)
+add_library(processBitmap process_bitmap/main.c)
 
 #[[
 The following line tells CMake that the target named utils library executable depends on the path ${CMAKE_CURRENT_SOURCE_DIR}/util
@@ -22,9 +24,13 @@ PUBLIC: Means both the target itself and any target that links against it will u
 
 ]]#
 target_include_directories(utils PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/utils)
+target_include_directories(ascii PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/ascii)
+target_include_directories(processBitmap PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/process_bitmap)
 
 # Assuming our main application file is main.c, it is compiled to create the ImageToASCIILineArt executable.
 add_executable(ImageToASCIILineArt main.c)
 
 # This links the utils library you just added above (add_library()) to your executable you just created above (add_executable())
 target_link_libraries(ImageToASCIILineArt PUBLIC utils)
+target_link_libraries(ImageToASCIILineArt PUBLIC ascii)
+target_link_libraries(ImageToASCIILineArt PUBLIC processBitmap)
