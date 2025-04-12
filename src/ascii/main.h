@@ -6,7 +6,6 @@
 #include <float.h>
 
 #define SIZE 3  /* 3x3 matrix size from edge detection output */
-#define TEMPLATE_COUNT 6  /* Number of ASCII characters to choose from (i.e. number of templates) */
 
 typedef int Matrix[SIZE][SIZE];
 
