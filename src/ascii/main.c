@@ -37,8 +37,19 @@ const AsciiTemplate ASCII_TEMPLATES[TEMPLATE_COUNT] = {
     }}
 };
 
+/* Determine the weight based on the ASCII character type */
+double get_weight(char ascii_char) {
+  switch (ascii_char) {
+      case '/': case '\\': return 0.9;
+      case '|':            return 1.1;
+      case '-':            return 1.2;
+      case 'X':            return 1.3;
+      default:             return 1.0;
+  }
+}
+
 /* Normalize edge values into binary (0 or 1) */
-void normalize_edge_matrix(int edge_matrix[SIZE][SIZE], int binary_matrix[SIZE][SIZE]) {
+void normalize_edge_matrix(Matrix edge_matrix, Matrix binary_matrix) {
   int i, j;
   for (i = 0; i < SIZE; i++) {
       for (j = 0; j < SIZE; j++) {
@@ -49,22 +60,10 @@ void normalize_edge_matrix(int edge_matrix[SIZE][SIZE], int binary_matrix[SIZE][
 }
 
 /* Compute MSE: sum of squared differences between matrices with weight for penalising mismatches */
-double compute_mse(int edge_matrix[SIZE][SIZE], const int ascii_template[SIZE][SIZE], char ascii_char) {
-  double mse = 0.0;
+double compute_mse(Matrix edge_matrix, const Matrix ascii_template, char ascii_char) {
   int i, j;
-
-  double weight = 1.0; /* Default neutral weight */
-
-  /* Assign positive, neutral, and negative weights based on ASCII character type */
-  if (ascii_char == '/' || ascii_char == '\\') {
-      weight = 0.9;  /* Slightly favor diagonal edges */
-  } else if (ascii_char == '|') {
-      weight = 1.1;  /* Slightly penalize vertical bars if diagonals are dominant */
-  } else if (ascii_char == '-') {
-      weight = 1.2;  /* Penalize horizontal lines if not well-matched */
-  } else if (ascii_char == 'X') {
-      weight = 1.3;  /* Strong penalty if `X` is chosen when not needed */
-  }
+  double mse = 0.0;
+  double weight = get_weight(ascii_char);
 
   /* Compute MSE with the adjusted weight */
   for (i = 0; i < SIZE; i++) {
@@ -78,10 +77,10 @@ double compute_mse(int edge_matrix[SIZE][SIZE], const int ascii_template[SIZE][S
 }
 
 /* Finds the best matching ASCII character for a given 3x3 edge matrix */
-char find_best_ascii(int edge_matrix[SIZE][SIZE]) {
+char find_best_ascii(Matrix edge_matrix) {
+  int i;
   double min_mse = DBL_MAX;
   char best_match = ' ';
-  int i;
 
   printf("Checking Weighted MSE for different ASCII templates:\n");
 
@@ -102,7 +101,7 @@ char find_best_ascii(int edge_matrix[SIZE][SIZE]) {
 }
 
 /* Prints a 3x3 matrix (for debugging) */
-void print_matrix(int matrix[SIZE][SIZE]) {
+void print_matrix(Matrix matrix) {
     int i, j;
     printf("Matrix:\n");
     for (i = 0; i < SIZE; i++) {
@@ -113,91 +112,53 @@ void print_matrix(int matrix[SIZE][SIZE]) {
     }
 }
 
+/* === Test Case Runner === */
+void run_test_case(const char *label, Matrix matrix, int normalize) {
+  Matrix binary_matrix;
+
+  printf("========== %s ==========\n", label);
+  print_matrix(matrix);
+
+  if (normalize) {
+      normalize_edge_matrix(matrix, binary_matrix);
+      printf("Normalized Binary Matrix:\n");
+      print_matrix(binary_matrix);
+      printf("ASCII character selected: %c\n\n", find_best_ascii(binary_matrix));
+  } else {
+      printf("ASCII character selected: %c\n\n", find_best_ascii(matrix));
+  }
+}
+
 /* TODO: remove in future. Used for testing for now */
 int main() {
-  /* Test Case 1: `/` Diagonal */
-  int edge_matrix_1[SIZE][SIZE] = {
-      {0, 0, 1},
-      {0, 1, 0},
-      {1, 0, 0}
+  int i;
+
+  Matrix test_cases[][1] = {
+      {{{0, 0, 1}, {0, 1, 0}, {1, 0, 0}}},
+      {{{1, 0, 0}, {0, 1, 0}, {0, 0, 1}}},
+      {{{0, 1, 0}, {0, 1, 0}, {0, 1, 0}}},
+      {{{0, 0, 0}, {1, 1, 1}, {0, 0, 0}}},
+      {{{1, 0, 1}, {0, 1, 0}, {1, 0, 1}}},
+      {{{0, 1, 0}, {1, 1, 1}, {0, 1, 0}}},
+      {{{0, 100, 255}, {50, 200, 100}, {0, 50, 0}}}
   };
 
-  /* Test Case 2: `\` Diagonal */
-  int edge_matrix_2[SIZE][SIZE] = {
-      {1, 0, 0},
-      {0, 1, 0},
-      {0, 0, 1}
+  const char *labels[] = {
+      "Test Case 1: `/` Diagonal",
+      "Test Case 2: `\\` Diagonal",
+      "Test Case 3: `|` Vertical Line",
+      "Test Case 4: `-` Horizontal Line",
+      "Test Case 5: `X` Shape",
+      "Test Case 6: `+` Shape",
+      "Test Case 7: Realistic Edge Detection"
   };
 
-  /* Test Case 3: Vertical Bar `|` */
-  int edge_matrix_3[SIZE][SIZE] = {
-      {0, 1, 0},
-      {0, 1, 0},
-      {0, 1, 0}
-  };
+  /* Flags indicating whether each corresponding test case should be normalized (1 = normalize, 0 = don't normalise) */
+  int normalize_flags[] = {0, 0, 0, 0, 0, 0, 1};
 
-  /* Test Case 4: Horizontal Bar `-` */
-  int edge_matrix_4[SIZE][SIZE] = {
-      {0, 0, 0},
-      {1, 1, 1},
-      {0, 0, 0}
-  };
-
-  /* Test Case 5: `X` Shape */
-  int edge_matrix_5[SIZE][SIZE] = {
-      {1, 0, 1},
-      {0, 1, 0},
-      {1, 0, 1}
-  };
-
-  /* Test Case 6: Realistic Edge Detection Input */
-  int edge_matrix_6[SIZE][SIZE] = {
-      {0, 100, 255},
-      {50, 200, 100},
-      {0, 50, 0}
-  };
-
-  /* Test Case 7: `+` Shape */
-  int edge_matrix_7[SIZE][SIZE] = {
-      {0, 1, 0},
-      {1, 1, 1},
-      {0, 1, 0}
-  };
-
-  /* Normalized binary matrix for Test Case 6 */
-  int binary_matrix[SIZE][SIZE];
-
-  /* Run Tests */
-  printf("========== Test Case 1: `/` Diagonal ==========\n");
-  print_matrix(edge_matrix_1);
-  printf("ASCII character selected: %c\n\n", find_best_ascii(edge_matrix_1));
-
-  printf("========== Test Case 2: `\\` Diagonal ==========\n");
-  print_matrix(edge_matrix_2);
-  printf("ASCII character selected: %c\n\n", find_best_ascii(edge_matrix_2));
-
-  printf("========== Test Case 3: `|` Vertical Line ==========\n");
-  print_matrix(edge_matrix_3);
-  printf("ASCII character selected: %c\n\n", find_best_ascii(edge_matrix_3));
-
-  printf("========== Test Case 4: `-` Horizontal Line ==========\n");
-  print_matrix(edge_matrix_4);
-  printf("ASCII character selected: %c\n\n", find_best_ascii(edge_matrix_4));
-
-  printf("========== Test Case 5: `X` Shape ==========\n");
-  print_matrix(edge_matrix_5);
-  printf("ASCII character selected: %c\n\n", find_best_ascii(edge_matrix_5));
-
-  printf("========== Test Case 6: `+` Shape ==========\n");
-  print_matrix(edge_matrix_7);
-  printf("ASCII character selected: %c\n\n", find_best_ascii(edge_matrix_7));
-
-  printf("========== Test Case 7: Realistic Edge Detection ==========\n");
-  print_matrix(edge_matrix_6);
-  normalize_edge_matrix(edge_matrix_6, binary_matrix);
-  printf("Normalized Binary Matrix:\n");
-  print_matrix(binary_matrix);
-  printf("ASCII character selected: %c\n\n", find_best_ascii(binary_matrix));
+  for (i = 0; i < sizeof(test_cases) / sizeof(test_cases[0]); i++) {
+      run_test_case(labels[i], test_cases[i][0], normalize_flags[i]);
+  }
 
   return 0;
 }

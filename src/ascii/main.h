@@ -8,16 +8,16 @@
 #define SIZE 3  /* 3x3 matrix size from edge detection output */
 #define TEMPLATE_COUNT 6  /* Number of ASCII characters to choose from (i.e. number of templates) */
 
-/* Structure to store ASCII character templates */
+typedef int Matrix[SIZE][SIZE];
+
 typedef struct {
     char character;
     int ascii_template[SIZE][SIZE];
 } AsciiTemplate;
 
-/* Function Prototypes */
-void normalize_edge_matrix(int edge_matrix[SIZE][SIZE], int binary_matrix[SIZE][SIZE]);
-double compute_mse(int edge_matrix[SIZE][SIZE], const int ascii_template[SIZE][SIZE], char ascii_char);
-char find_best_ascii(int edge_matrix[SIZE][SIZE]);
-void print_matrix(int matrix[SIZE][SIZE]);
+void normalize_edge_matrix(Matrix edge_matrix, Matrix binary_matrix);
+double compute_mse(Matrix edge_matrix, const Matrix ascii_template, char ascii_char);
+char find_best_ascii(Matrix edge_matrix);
+void print_matrix(Matrix edge_matrix);
 
 #endif
