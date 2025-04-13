@@ -22,9 +22,6 @@ int matricesAreEqual(Matrix *firstMatrix, Matrix *secondMatrix);
 void free2DArray(int ** array, int numberRows);
 void freeMatrix(Matrix *matrix);
 
-Matrix * addPaddingToMatrix(Matrix * matrix, int padding);
-Matrix * removePaddingFromMatrix(Matrix * matrix, int padding);
-
 Matrix * getSurroundingElements(Matrix * matrix, int targetRow, int targetCol, int kernelSize);
 int matrixDotProduct(Matrix * matrix1, Matrix * matrix2, int kernelSize);
 Matrix * applyKernel(Matrix * matrix, Matrix * kernel);

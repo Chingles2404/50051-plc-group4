@@ -138,38 +138,6 @@ void freeMatrix(Matrix *matrix) {
     free(matrix);
 }
 
-Matrix * addPaddingToMatrix(Matrix * matrix, int padding) {
-    int newNumberRows = matrix->numberRows + 2 * padding;
-    int newNumberCols = matrix->numberCols + 2 * padding;
-    Matrix * newMatrix = createMatrix(newNumberRows, newNumberCols);
-
-    int row, col;
-    for (row = 0; row < newNumberRows; row++) {
-        for (col = 0; col < newNumberCols; col++) {
-            if (row < padding || row >= newNumberRows - padding || col < padding || col >= newNumberCols - padding) {
-                setMatrixElement(newMatrix, row, col, 0);
-            } else {
-                setMatrixElement(newMatrix, row, col, getMatrixElement(matrix, row - padding, col - padding));
-            }
-        }
-    }
-    return newMatrix;
-}
-
-Matrix * removePaddingFromMatrix(Matrix * matrix, int padding) {
-    int newNumberRows = matrix->numberRows - 2 * padding;
-    int newNumberCols = matrix->numberCols - 2 * padding;
-    Matrix * newMatrix = createMatrix(newNumberRows, newNumberCols);
-
-    int row, col;
-    for (row = 0; row < newNumberRows; row++) {
-        for (col = 0; col < newNumberCols; col++) {
-            setMatrixElement(newMatrix, row, col, getMatrixElement(matrix, row + padding, col + padding));
-        }
-    }
-    return newMatrix;
-}
-
 Matrix * getSurroundingElements(Matrix * matrix, int targetRow, int targetCol, int kernelSize) {
     Matrix * newMatrix = createMatrix(kernelSize, kernelSize);
     int radius = kernelSize / 2;
