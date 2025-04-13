@@ -5,7 +5,7 @@ In our case, utils is the library. utils.c is the source file.
 
 As utils.c has its own inclusion of headers in the same directory (utils.h), we can opt it out here
 ]]
-add_library(utils utils/utils.c)
+add_library(edgeDetection edge_detection/main.c)
 add_library(ascii ascii/main.c)
 add_library(processBitmap process_bitmap/main.c)
 
@@ -23,7 +23,7 @@ INTERFACE: Only the targets that link against this target will use these include
 PUBLIC: Means both the target itself and any target that links against it will use these include directories.
 
 ]]#
-target_include_directories(utils PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/utils)
+target_include_directories(edgeDetection PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/edge_detection)
 target_include_directories(ascii PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/ascii)
 target_include_directories(processBitmap PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/process_bitmap)
 
@@ -31,6 +31,6 @@ target_include_directories(processBitmap PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/proc
 add_executable(ImageToASCIILineArt main.c)
 
 # This links the utils library you just added above (add_library()) to your executable you just created above (add_executable())
-target_link_libraries(ImageToASCIILineArt PUBLIC utils)
+target_link_libraries(ImageToASCIILineArt PUBLIC edgeDetection)
 target_link_libraries(ImageToASCIILineArt PUBLIC ascii)
 target_link_libraries(ImageToASCIILineArt PUBLIC processBitmap)
