@@ -29,4 +29,6 @@ int pythagoreanAddition(int x, int y);
 
 Matrix * getGradientOfPixel(Matrix * target, Matrix * xKernel, Matrix * yKernel);
 
+Matrix * gradientPipeline(Matrix * target);
+
 #endif

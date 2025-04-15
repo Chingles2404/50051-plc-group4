@@ -143,10 +143,15 @@ Matrix * getSurroundingElements(Matrix * matrix, int targetRow, int targetCol, i
     int radius = kernelSize / 2;
     int temp;
 
+    if (targetRow < radius || targetRow >= matrix->numberRows - radius ||
+        targetCol < radius || targetCol >= matrix->numberCols - radius) {
+        return newMatrix;
+    }
+
     int row, col;
     for (row = 0; row < kernelSize; row++) {
         for (col = 0; col < kernelSize; col++) {
-            temp = getMatrixElement(matrix, row + row - radius, col + col - radius);
+            temp = getMatrixElement(matrix, targetRow + row - radius, targetCol + col - radius);
             setMatrixElement(newMatrix, row, col, temp);
         }
     }
@@ -171,13 +176,13 @@ Matrix * applyKernel(Matrix * matrix, Matrix * kernel) {
     Matrix * newMatrix, * paddedMatrix, * surroundingElements;
     int temp, radius;
     int row, col;
-    if (kernel->numberRows % 2 == 0 && kernel->numberRows != kernel->numberCols) {
+    if (kernel->numberRows % 2 == 0 || kernel->numberRows != kernel->numberCols) {
         printf("wrong size");
         return matrix;
     }
 
     newMatrix = createMatrix(matrix->numberRows, matrix->numberCols);
-    paddedMatrix = addPaddingToMatrix(matrix, kernel->numberRows / 2);
+    paddedMatrix = createPaddedMatrixWithZeros(matrix, kernel->numberRows / 2);
     radius = kernel->numberRows / 2;
     
     for (row = radius; row < matrix->numberRows + radius; row++) {
@@ -214,4 +219,35 @@ Matrix * getGradientOfPixel(Matrix * target, Matrix * xKernel, Matrix * yKernel)
     freeMatrix(gy);
 
     return g;
+}
+
+Matrix * gradientPipeline(Matrix * target) {
+    Matrix * xKernel = createMatrix(3, 3);
+    setMatrixElement(xKernel, 0, 0, -1);
+    setMatrixElement(xKernel, 0, 1, 0);
+    setMatrixElement(xKernel, 0, 2, 1);
+    setMatrixElement(xKernel, 1, 0, -2);
+    setMatrixElement(xKernel, 1, 1, 0);
+    setMatrixElement(xKernel, 1, 2, 2);
+    setMatrixElement(xKernel, 2, 0, -1);
+    setMatrixElement(xKernel, 2, 1, 0);
+    setMatrixElement(xKernel, 2, 2, 1);
+
+    Matrix * yKernel = createMatrix(3, 3);
+    setMatrixElement(yKernel, 0, 0, -1);
+    setMatrixElement(yKernel, 0, 1, -2);
+    setMatrixElement(yKernel, 0, 2, -1);
+    setMatrixElement(yKernel, 1, 0, 0);
+    setMatrixElement(yKernel, 1, 1, 0);
+    setMatrixElement(yKernel, 1, 2, 0);
+    setMatrixElement(yKernel, 2, 0, 1);
+    setMatrixElement(yKernel, 2, 1, 2);
+    setMatrixElement(yKernel, 2, 2, 1);
+
+    Matrix * gradient = getGradientOfPixel(target, xKernel, yKernel);
+
+    freeMatrix(xKernel);
+    freeMatrix(yKernel);
+
+    return gradient;
 }
