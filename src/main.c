@@ -1,222 +1,165 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "bitmap.h"
+#include <string.h>
+#include "bitmap_parser.h"
 #include "edge_detection.h"
+#include "ascii_main.h"
+
+Matrix* convertToAsciiMatrix(Matrix* edgeMatrix) {
+    // We use 3 by 3 for testing
+    if (!edgeMatrix || edgeMatrix->numberRows < 3 || edgeMatrix->numberCols < 3) {
+        return NULL;
+    }
+
+    Matrix* asciiMatrix = createMatrix(3, 3);
+    if (!asciiMatrix) {
+        return NULL;
+    }
+
+    for (int y = 0; y < 3; y++) {
+        for (int x = 0; x < 3; x++) {
+            int val = getMatrixElement(edgeMatrix, y, x);
+            setMatrixElement(asciiMatrix, y, x, (val > 128) ? 1 : 0);
+        }
+    }
+
+    return asciiMatrix;
+}
 
 int main(int argc, char **argv) {
-    printf("Integration of codes in this function");
-    
-    const char *filename;
-    FILE *fp;
-    FILEHEADER fileHeader;
-    INFOHEADER infoHeader;
-    unsigned char *pixelData;
-
     if (argc < 2) {
         printf("Usage: %s <bitmap_file>\n", argv[0]);
         return EXIT_FAILURE;
     }
 
-    filename = argv[1];
-    fp = openBitmapFile(filename);
-    if (fp == NULL) {
-        perror("Failed to open file");
-        return EXIT_FAILURE;
-    }
-
-    readBitmapHeaders(fp, &fileHeader, &infoHeader);
-    if (!validateBitmap(&fileHeader)) {
-        printf("File is not a valid BMP.\n");
-        fclose(fp);
-        return EXIT_FAILURE;
-    }
-
-    printf("Bitmap dimensions: %dx%d\n", infoHeader.width, infoHeader.height);
-    printf("Bits per pixel: %d\n", infoHeader.bits);
-
-    pixelData = NULL;
-    readPixelData(fp, &infoHeader, &pixelData);
-
-    if (pixelData == NULL) {
-        printf("Failed to read pixel data.\n");
-        fclose(fp);
-        return EXIT_FAILURE;
-    }
-
-
-    // Here we should have the pixel data as a stream of characters. We need code to convert from stream of characters to a 2D array
-
-    Matrix *originalMatrix;
-    int value;
-    int rowIndex;
-    int columnIndex;
-    Matrix *paddedMatrix;
-    Matrix *removedPaddingMatrix;
+    const char *filename = argv[1];
     
-    originalMatrix = createMatrix(3, 3);
-
-    value = 1;
-    for (rowIndex = 0; rowIndex < originalMatrix->numberRows; rowIndex++) {
-        for (columnIndex = 0; columnIndex < originalMatrix->numberCols; columnIndex++) {
-            setMatrixElement(originalMatrix, rowIndex, columnIndex, value++);
-        }
-    }
-
-    paddedMatrix = createPaddedMatrixWithZeros(originalMatrix, 1);
-
-    printf("Padded Matrix:\n");
-    for (rowIndex = 0; rowIndex < paddedMatrix->numberRows; rowIndex++) {
-        for (columnIndex = 0; columnIndex < paddedMatrix->numberCols; columnIndex++) {
-            printf("%d ", getMatrixElement(paddedMatrix, rowIndex, columnIndex));
-        }
-        printf("\n");
+    BitmapParser* parser = createBitmapParser();
+    if (parser == NULL) {
+        fprintf(stderr, "Failed to create bitmap parser\n");
+        return EXIT_FAILURE;
     }
     
-    removedPaddingMatrix = createMatrixWithRemovedPadding(paddedMatrix, 1);
-    printf("Removed-Padding Matrix:\n");
-    for (rowIndex = 0; rowIndex < removedPaddingMatrix->numberRows; rowIndex++) {
-        for (columnIndex = 0; columnIndex < removedPaddingMatrix->numberCols; columnIndex++) {
-            printf("%d ", getMatrixElement(removedPaddingMatrix, rowIndex, columnIndex));
+    printf("Parsing file: %s\n", filename);
+    if (!parseFile(parser, filename)) {
+        fprintf(stderr, "Error parsing bitmap: %s\n", 
+                parser->error_message ? parser->error_message : "Unknown error");
+        freeBitmapParser(parser);
+        return EXIT_FAILURE;
+    }
+    
+    /* at this point, parsing is successful */
+    printf("Successfully parsed bitmap file\n");
+    printf("Dimensions: %d x %d\n", parser->infoHeader.width, parser->infoHeader.height);
+    
+    if (parser->pixelData != NULL) {
+        int width = parser->infoHeader.width;
+        int height = parser->infoHeader.height;
+        
+        /* convert pizel data to matrix form for edge dectecionn */
+        Matrix* image = createMatrix(height, width);
+        if (image == NULL) {
+            fprintf(stderr, "Failed to create image matrix\n");
+            freeBitmapParser(parser);
+            return EXIT_FAILURE;
         }
-        printf("\n");
-    }
-
-    if (matricesAreEqual(originalMatrix, removedPaddingMatrix)) {
-        printf("Matrices are equal\n");
-    } else {
-        printf("Matrices are not equal\n");
-    }
-
-    Matrix * surrounding1 = getSurroundingElements(paddedMatrix, 1, 1, 3);
-    Matrix * surrounding2 = getSurroundingElements(paddedMatrix, 3, 3, 3);
-    int dot = matrixDotProduct(surrounding1, surrounding2, 3);
-    printf("Surrounding1:\n");
-    for (rowIndex = 0; rowIndex < surrounding1->numberRows; rowIndex++) {
-        for (columnIndex = 0; columnIndex < surrounding1->numberCols; columnIndex++) {
-            printf("%d ", getMatrixElement(surrounding1, rowIndex, columnIndex));
+        
+        /* fill the matrix with grayscale pixel data */
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                int idx = y * width + x;
+                setMatrixElement(image, y, x, parser->pixelData[idx]);
+            }
         }
-        printf("\n");
-    }
-    printf("Surrounding2:\n");
-    for (rowIndex = 0; rowIndex < surrounding2->numberRows; rowIndex++) {
-        for (columnIndex = 0; columnIndex < surrounding2->numberCols; columnIndex++) {
-            printf("%d ", getMatrixElement(surrounding2, rowIndex, columnIndex));
+        
+        /* apply edge detection */
+        Matrix* edges = gradientPipeline(image);
+        if (edges == NULL) {
+            fprintf(stderr, "Edge detection failed\n");
+            freeMatrix(image);
+            freeBitmapParser(parser);
+            return EXIT_FAILURE;
         }
-        printf("\n");
-    }
-    printf("Dot product: %d\n", dot);
+        
+        printf("Edge detection completed\n");
 
-    Matrix * xKernel = createMatrix(3, 3);
-    setMatrixElement(xKernel, 0, 0, -1);
-    setMatrixElement(xKernel, 0, 1, 0);
-    setMatrixElement(xKernel, 0, 2, 1);
-    setMatrixElement(xKernel, 1, 0, -2);
-    setMatrixElement(xKernel, 1, 1, 0);
-    setMatrixElement(xKernel, 1, 2, 2);
-    setMatrixElement(xKernel, 2, 0, -1);
-    setMatrixElement(xKernel, 2, 1, 0);
-    setMatrixElement(xKernel, 2, 2, 1);
-    Matrix * yKernel = createMatrix(3, 3);
-    setMatrixElement(yKernel, 0, 0, -1);
-    setMatrixElement(yKernel, 0, 1, -2);
-    setMatrixElement(yKernel, 0, 2, -1);
-    setMatrixElement(yKernel, 1, 0, 0);
-    setMatrixElement(yKernel, 1, 1, 0);
-    setMatrixElement(yKernel, 1, 2, 0);
-    setMatrixElement(yKernel, 2, 0, 1);
-    setMatrixElement(yKernel, 2, 1, 2);
-    setMatrixElement(yKernel, 2, 2, 1);
-
-    Matrix * gx = applyKernel(originalMatrix, xKernel);
-    Matrix * gy = applyKernel(originalMatrix, yKernel);
-    printf("Gx:\n");
-    for (rowIndex = 0; rowIndex < gx->numberRows; rowIndex++) {
-        for (columnIndex = 0; columnIndex < gx->numberCols; columnIndex++) {
-            printf("%d ", getMatrixElement(gx, rowIndex, columnIndex));
+        int chunkSize = 3; /* For 3x3 ASCII templates */
+        int chunkRows = edges->numberRows / chunkSize;
+        int chunkCols = edges->numberCols / chunkSize;
+        int totalChunks = chunkRows * chunkCols;
+    
+        Matrix** chunks = chunkImage(edges, chunkSize);
+        if (chunks == NULL) {
+            fprintf(stderr, "Image chunking failed\n");
+            freeMatrix(edges);
+            freeMatrix(image);
+            freeBitmapParser(parser);
+            return EXIT_FAILURE;
         }
-        printf("\n");
-    }
-    printf("Gy:\n");
-    for (rowIndex = 0; rowIndex < gy->numberRows; rowIndex++) {
-        for (columnIndex = 0; columnIndex < gy->numberCols; columnIndex++) {
-            printf("%d ", getMatrixElement(gy, rowIndex, columnIndex));
+    
+        printf("Image divided into %d chunks (%d x %d)\n", totalChunks, chunkRows, chunkCols);
+        
+        char* asciiArt = (char*)malloc((chunkRows * (chunkCols + 1) + 1) * sizeof(char));
+        if (asciiArt == NULL) {
+            fprintf(stderr, "Failed to allocate memory for ASCII art\n");
+            
+        /*  Free all resources */
+            for (int i = 0; i < totalChunks; i++) {
+                freeMatrix(chunks[i]);
+            }
+            free(chunks);
+            freeMatrix(edges);
+            freeMatrix(image);
+            freeBitmapParser(parser);
+            return EXIT_FAILURE;
         }
-        printf("\n");
-    }
+        
+        /* Map each chunk to an ASCII character */
+        for (int r = 0; r < chunkRows; r++) {
+            for (int c = 0; c < chunkCols; c++) {
+                int chunkIndex = r * chunkCols + c;
 
-    Matrix * gradient = getGradientOfPixel(originalMatrix, xKernel, yKernel);
-    printf("Gradient:\n");
-    for (rowIndex = 0; rowIndex < gradient->numberRows; rowIndex++) {
-        for (columnIndex = 0; columnIndex < gradient->numberCols; columnIndex++) {
-            printf("%d ", getMatrixElement(gradient, rowIndex, columnIndex));
+            Matrix* asciiMatrix = convertToAsciiMatrix(chunks[chunkIndex]);
+            if (asciiMatrix == NULL) {
+                fprintf(stderr, "Failed to convert chunk %d to ASCII matrix\n", chunkIndex);
+                // Cleanup and exit or continue with fallback
+                asciiArt[r * (chunkCols + 1) + c] = '?';
+                continue;
+            }
+
+            char ascii = find_best_ascii(asciiMatrix);
+            asciiArt[r * (chunkCols + 1) + c] = ascii;
+            freeMatrix(asciiMatrix);
         }
-        printf("\n");
-    }
-
-    Matrix * gradientPipelineResult = gradientPipeline(originalMatrix);
-    printf("Gradient Pipeline Result:\n");
-    for (rowIndex = 0; rowIndex < gradientPipelineResult->numberRows; rowIndex++) {
-        for (columnIndex = 0; columnIndex < gradientPipelineResult->numberCols; columnIndex++) {
-            printf("%d ", getMatrixElement(gradientPipelineResult, rowIndex, columnIndex));
+        /* Add newline at the end of each row */
+        asciiArt[r * (chunkCols + 1) + chunkCols] = '\n';
         }
-        printf("\n");
+        /* added null terminator */
+        asciiArt[chunkRows * (chunkCols + 1)] = '\0';
+        
+
+        printf("ASCII Art:\n%s\n", asciiArt);
+        
+
+        FILE* outFile = fopen("build/ImageOutput.txt", "w");
+        if (outFile != NULL) {
+            fprintf(outFile, "%s", asciiArt);
+            fclose(outFile);
+            printf("ASCII art saved to ImageOutput.txt\n");
+        } else {
+            fprintf(stderr, "Failed to open output file\n");
+        }
+        
+        /* Free all resources */
+        free(asciiArt);
+        for (int i = 0; i < totalChunks; i++) {
+            freeMatrix(chunks[i]);
+        }
+        free(chunks);
+        freeMatrix(edges);
+        freeMatrix(image);
+        freeBitmapParser(parser);
+        
+        return EXIT_SUCCESS;
     }
-    if (matricesAreEqual(gradient, gradientPipelineResult)) {
-        printf("Gradient and Gradient Pipeline Result are equal\n");
-    } else {
-        printf("Gradient and Gradient Pipeline Result are not equal\n");
-    }
-
-
-
-    free(pixelData);
-    fclose(fp);
-
-    freeMatrix(originalMatrix);
-    freeMatrix(paddedMatrix);
-    freeMatrix(removedPaddingMatrix);
-    freeMatrix(surrounding1);
-    freeMatrix(surrounding2);
-    freeMatrix(xKernel);
-    freeMatrix(yKernel);
-    freeMatrix(gx);
-    freeMatrix(gy);
-    freeMatrix(gradient);
-    freeMatrix(gradientPipelineResult);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    free(pixelData);
-    fclose(fp);
-
-    return EXIT_SUCCESS;
 }

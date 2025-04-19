@@ -1,16 +1,17 @@
 CC = gcc
-CFLAGS = -Wall -Werror -I.        # Includes current folder (where bitmap.h is)
+CFLAGS = -Wall -Werror -pedantic
+OBJS = main.o bitmap_parser.o
 
-SRC = bitmap_main.c bitmap.c bitmap_utils.c
-OUT = bitmap_processor
+all: bmp2ascii
 
-all: $(OUT)
+bmp2ascii: $(OBJS)
+	$(CC) $(CFLAGS) -o bmp2ascii.exe $(OBJS)
 
-$(OUT): $(SRC)
-	$(CC) $(CFLAGS) $(SRC) -o $(OUT)
+main.o: main.c bitmap_parser.h
+	$(CC) $(CFLAGS) -c main.c
 
-run: $(OUT)
-	./$(OUT) example.bmp
+bitmap_parser.o: bitmap_parser.c bitmap_parser.h
+	$(CC) $(CFLAGS) -c bitmap_parser.c
 
 clean:
-	rm -f $(OUT)
+	$(RM) *.o bmp2ascii.exe output.txt
