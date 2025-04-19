@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include "bitmap.h"
 #include "bitmap_parser.h"
-
 
 int main(int argc, char **argv) {
     if (argc < 2) {

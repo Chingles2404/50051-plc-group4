@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <assert.h>
-#include "utils.h"
+#include "edge_detection.h"
 #include "test_utils.h"
 
 void test_create_and_free_2DArray() {

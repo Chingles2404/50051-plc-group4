@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-#include "utils.h"
+#include "edge_detection.h"
 
 int ** create2DArray(int numberRows, int numberCols) {
     int rowIndex;

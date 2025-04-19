@@ -5,9 +5,9 @@ In our case, utils is the library. utils.c is the source file.
 
 As utils.c has its own inclusion of headers in the same directory (utils.h), we can opt it out here
 ]]
-add_library(edgeDetection edge_detection/main.c)
-add_library(ascii ascii/main.c)
-add_library(processBitmap process_bitmap/main.c)
+add_library(edgeDetection edge_detection/edge_detection_main.c edge_detection/edge_detection_utils.c)
+add_library(ascii ascii/ascii_main.c)
+add_library(processBitmap process_bitmap/bitmap_main.c process_bitmap/bitmap_utils.c process_bitmap/bitmap.c)
 
 #[[
 The following line tells CMake that the target named utils library executable depends on the path ${CMAKE_CURRENT_SOURCE_DIR}/util

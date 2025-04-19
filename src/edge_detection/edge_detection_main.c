@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include "utils.h"
+#include "edge_detection.h"
 
 int main(int argc, char **argv) {
 
