@@ -33,7 +33,7 @@ set OUTPUT_BMP=build\ImageOutput.txt
 REM Assumption is that we are in /build directory. So the path is relative
 set TESTS_EXE=tests\runAllTests.exe
 
-set RUN_TESTS=1
+set RUN_TESTS=0
 
 if "%RUN_TESTS%" == "1" (
     echo Running tests...

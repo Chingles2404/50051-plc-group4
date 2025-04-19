@@ -10,7 +10,7 @@ add_library(utilities utilities/matrices.c)
 add_library(edgeDetection edge_detection/edge_detection_main.c edge_detection/edge_detection.c)
 add_library(ascii ascii/ascii.c)
 add_library(processBitmap process_bitmap/bitmap_main.c process_bitmap/bitmap_parser.c)
-
+add_library(appfsm app_fsm.c)
 #[[
 The following line tells CMake that the target named utils library executable depends on the path ${CMAKE_CURRENT_SOURCE_DIR}/util
 
@@ -29,9 +29,12 @@ target_include_directories(utilities PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/utilitie
 target_include_directories(edgeDetection PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/edge_detection)
 target_include_directories(ascii PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/ascii)
 target_include_directories(processBitmap PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/process_bitmap)
+target_include_directories(appfsm PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 # Assuming our main application file is main.c, it is compiled to create the ImageToASCIILineArt executable.
 add_executable(ImageToASCIILineArt main.c)
+
+target_link_libraries(appfsm PUBLIC utilities ascii edgeDetection  processBitmap)
 
 target_link_libraries(ascii PUBLIC edgeDetection utilities)
 target_link_libraries(edgeDetection PUBLIC utilities)

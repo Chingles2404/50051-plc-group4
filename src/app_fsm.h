@@ -6,7 +6,7 @@
 #include <string.h>
 #include "bitmap_parser.h"
 #include "edge_detection.h"
-#include "ascii_main.h"
+#include "ascii.h"
 
 typedef enum {
     STATE_MAIN_MENU,
@@ -52,9 +52,6 @@ typedef struct {
     char* errorMessage;
 } AppContext;
 
-AppContext* createAppContext();
-void freeAppContext(AppContext* ctx);
-AppState processState(AppContext* ctx);
 
 /* state handlers, i stopped here, need to keep adding */
 AppState handleMainMenu(AppContext* ctx);
@@ -62,49 +59,8 @@ AppState handleLoadImage(AppContext* ctx);
 AppState handleValidateFile(AppContext* ctx);
 
 
+AppContext* createAppContext();
 
-
-AppContext* createAppContext() {
-    AppContext* ctx = (AppContext*)malloc(sizeof(AppContext));
-    if (ctx == NULL) return NULL;
-    
-    ctx->state = STATE_MAIN_MENU;
-    ctx->filename = NULL;
-    ctx->parser = NULL;
-    ctx->image = NULL;
-    ctx->edges = NULL;
-    ctx->chunks = NULL;
-    ctx->asciiArt = NULL;
-    ctx->chunkSize = 3;      /* Default 3x3 resolution */
-    ctx->characterSet = 0;   /* Default ASCII set */
-    ctx->colorMode = 0;      /* Default grayscale */
-    ctx->totalChunks = 0;
-    ctx->chunkRows = 0;
-    ctx->chunkCols = 0;
-    ctx->errorMessage = NULL;
-    
-    return ctx;
-}
-
-void freeAppContext(AppContext* ctx) {
-    if (ctx == NULL) return;
-    
-    if (ctx->filename) free(ctx->filename);
-    if (ctx->parser) freeBitmapParser(ctx->parser);
-    if (ctx->image) freeMatrix(ctx->image);
-    if (ctx->edges) freeMatrix(ctx->edges);
-    
-    if (ctx->chunks) {
-        for (int i = 0; i < ctx->totalChunks; i++) {
-            if (ctx->chunks[i]) freeMatrix(ctx->chunks[i]);
-        }
-        free(ctx->chunks);
-    }
-    
-    if (ctx->asciiArt) free(ctx->asciiArt);
-    if (ctx->errorMessage) free(ctx->errorMessage);
-    
-    free(ctx);
-}
+void freeAppContext(AppContext* ctx);
 
 #endif
