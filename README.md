@@ -1,7 +1,7 @@
 # 50051 Programming Language Concepts  
 # Image to ASCII Line ART
 
-This project uses **CMake** to build and organize the code. A Windows batch script, `cleanRebuild.cmd`, is provided to simplify the build process.
+This project uses **CMake** to build and organise the code. A Windows batch script, `cleanRebuild.cmd`, is provided to simplify the build process.
 
 ---
 
@@ -20,7 +20,7 @@ This will:
 
 We used `./sample_inputs/example.bmp` as the predefined image file.
 
-The output of the executable will be located in the `./build` directory, named ImageOutput.txt
+The output of the executable will be located in the `./build` directory, named `ImageOutput.txt`
 
 ### Run the Executable
 After a successful build, the output binary will be located at:

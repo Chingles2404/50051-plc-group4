@@ -33,7 +33,7 @@ if "%RUN_TESTS%" == 1 (
 )
 
 
-set INPUT_BMP=sample_inputs\example2.bmp
+set INPUT_BMP=sample_inputs\example.bmp
 set EXE_PATH=build\ImageToASCIILineArt.exe
 set OUTPUT_BMP=build\ImageOutput.txt
 
