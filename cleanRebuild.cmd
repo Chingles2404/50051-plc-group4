@@ -1,3 +1,5 @@
+setlocal
+
 @echo off
 REM Remove the existing build directory
 if exist build (
@@ -23,8 +25,35 @@ cd build
 make
 
 
-REM Run tests using CTest
-ctest --output-on-failure
+set RUN_TESTS == 0
+if "%RUN_TESTS%" == 1 (
+    REM Run tests using CTest
+    ctest --output-on-failure
+)
 
 
+set INPUT_BMP=sample_inputs\example.bmp
+set EXE_PATH=build\ImageToASCIILineArt.exe
+set OUTPUT_BMP=build\ImageOutput.txt
+
+REM Run the compiled ASCII converter with an input BMP
 cd ..
+
+REM Run the program
+if exist %INPUT_BMP% (
+    echo Converting image to ASCII art...
+    %EXE_PATH% %INPUT_BMP%
+
+    if errorlevel 1 (
+        echo Conversion failed.
+    ) else (
+        echo Conversion done.
+    )
+) else (
+    echo Input BMP file "%INPUT_BMP%" not found.
+)
+
+echo ASCII art output is located at "%OUTPUT_BMP%".
+
+
+endlocal

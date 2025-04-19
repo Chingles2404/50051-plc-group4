@@ -1,3 +1,4 @@
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 #[[
 The add_library command tells CMake to compile a set of source files into a library target.
 
@@ -7,7 +8,9 @@ As utils.c has its own inclusion of headers in the same directory (utils.h), we 
 ]]
 add_library(edgeDetection edge_detection/edge_detection_main.c edge_detection/edge_detection_utils.c)
 add_library(ascii ascii/ascii_main.c)
-add_library(processBitmap process_bitmap/bitmap_main.c process_bitmap/bitmap_utils.c process_bitmap/bitmap.c)
+add_library(processBitmap process_bitmap/bitmap_main.c process_bitmap/bitmap_parser.c)
+
+target_link_libraries(ascii PUBLIC edgeDetection) # We use the Matrix structure from edgeDetection 
 
 #[[
 The following line tells CMake that the target named utils library executable depends on the path ${CMAKE_CURRENT_SOURCE_DIR}/util

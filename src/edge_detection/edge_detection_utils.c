@@ -66,6 +66,25 @@ Matrix *createPaddedMatrixWithZeros(Matrix *originalMatrix, int paddingAmount) {
 
 }
 
+/**
+ * int values[] = {
+        1, 2, 3,
+        4, 5, 6,
+        7, 8, 9
+    };
+ */
+Matrix* createMatrixFromFlatArray(int rows, int cols, const int values[]) {
+    Matrix* m = createMatrix(rows, cols);
+    if (!m) return NULL;
+
+    for (int i = 0; i < rows; ++i)
+        for (int j = 0; j < cols; ++j)
+            setMatrixElement(m, i, j, values[i * cols + j]);
+
+    return m;
+}
+
+
 Matrix * createMatrixWithRemovedPadding(Matrix *originalMatrix, int paddingAmountToRemove) {
     /* If paddingAmountToRemove is 1, that means we have to remove the original matrix with 1 layer of zero
     Creates a new matrix */

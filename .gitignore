@@ -1,3 +1,9 @@
 /build
 /Testing
 .vscode
+
+# Executables and output
+**/ascii_matcher
+**/edge_detection
+**/bmp2ascii.exe
+**/output.txt

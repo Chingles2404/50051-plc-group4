@@ -1,5 +1,5 @@
-#ifndef UTILS_H
-#define UTILS_H
+#ifndef EDGE_DETECTION_UTILS_H
+#define EDGE_DETECTION_UTILS_H
 
 int ** create2DArray(int numberRows, int numberCols);
 
@@ -12,6 +12,9 @@ typedef struct matrix {
 } Matrix;
 
 Matrix* createMatrix(int numberRows, int numberCols);
+
+Matrix* createMatrixFromFlatArray(int rows, int cols, const int values[]);
+
 void setMatrixElement(Matrix *matrix, int row, int col, int value);
 int getMatrixElement(Matrix *matrix, int row, int col);
 

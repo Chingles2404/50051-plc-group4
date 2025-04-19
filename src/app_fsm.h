@@ -4,9 +4,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "../process_bitmap/bitmap_parser.h"
-#include "../edge_detection/utils.h"
-#include "ascii.h"
+#include "bitmap_parser.h"
+#include "edge_detection.h"
+#include "ascii_main.h"
 
 typedef enum {
     STATE_MAIN_MENU,
