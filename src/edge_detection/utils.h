@@ -31,4 +31,6 @@ Matrix * getGradientOfPixel(Matrix * target, Matrix * xKernel, Matrix * yKernel)
 
 Matrix * gradientPipeline(Matrix * target);
 
+Matrix** chunkImage(Matrix* image, int chunkSize);
+
 #endif

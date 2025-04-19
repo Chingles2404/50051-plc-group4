@@ -251,3 +251,39 @@ Matrix * gradientPipeline(Matrix * target) {
 
     return gradient;
 }
+
+
+Matrix** chunkImage(Matrix* image, int chunkSize) {
+    int rows = image->numberRows;
+    int cols = image->numberCols;
+    
+    /* Calculate how many complete chunks we can fit */
+    int chunkRows = rows / chunkSize;
+    int chunkCols = cols / chunkSize;
+    
+    /* Allocate array of Matrix pointers */
+    Matrix** chunks = (Matrix**)malloc(chunkRows * chunkCols * sizeof(Matrix*));
+    if (chunks == NULL) return NULL;
+    
+    int chunkIndex = 0;
+    for (int r = 0; r < chunkRows; r++) {
+        for (int c = 0; c < chunkCols; c++) {
+            /* Create a new matrix for this chunk */
+            chunks[chunkIndex] = createMatrix(chunkSize, chunkSize);
+            
+            /* Fill with data from the original image */
+            for (int y = 0; y < chunkSize; y++) {
+                for (int x = 0; x < chunkSize; x++) {
+                    int srcY = r * chunkSize + y;
+                    int srcX = c * chunkSize + x;
+                    int val = getMatrixElement(image, srcY, srcX);
+                    setMatrixElement(chunks[chunkIndex], y, x, val);
+                }
+            }
+            
+            chunkIndex++;
+        }
+    }
+    
+    return chunks;
+}
