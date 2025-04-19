@@ -1,3 +1,4 @@
+@echo off
 setlocal
 
 @echo off
@@ -55,5 +56,5 @@ if exist %INPUT_BMP% (
 
 echo ASCII art output is located at "%OUTPUT_BMP%".
 
-
+@echo off
 endlocal
