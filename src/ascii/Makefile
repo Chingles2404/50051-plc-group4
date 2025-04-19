@@ -1,6 +1,6 @@
 CC = gcc
 CFLAGS = -Wall -Werror -I.        # Include current directory for headers
-SRC = main.c
+SRC = ascii_main.c
 OUT = ascii_matcher
 
 all: $(OUT)

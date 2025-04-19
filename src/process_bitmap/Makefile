@@ -1,7 +1,7 @@
 CC = gcc
 CFLAGS = -Wall -Werror -I.        # Includes current folder (where bitmap.h is)
 
-SRC = main.c bitmap.c utils.c
+SRC = bitmap_main.c bitmap.c bitmap_utils.c
 OUT = bitmap_processor
 
 all: $(OUT)

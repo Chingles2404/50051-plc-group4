@@ -1,13 +1,32 @@
 # 50051 Programming Language Concepts  
 # Image to ASCII Line ART
 
-# To Run
+This project uses **CMake** to build and organize the code. A Windows batch script, `cleanRebuild.cmd`, is provided to simplify the build process.
 
-Run `cleanRebuild.cmd` (for Windows).
+---
 
-This script cleans up built directories and rebuilds the project. It also runs tests under `./tests`.
+### Build the Project
 
-The output executable binary file will be located in the folder `./build/build`. The project uses CMake to simplify the building process and organise the code.
+On **Windows**, open **Command Prompt (CMD)** and run: `cleanRebuild.cmd`
+
+This will
+
+1. Clean any existing build files
+2. Rebuild the project into a new `./build` directory
+3. Automatically run tests (can be disabled in the script)
+
+### Run the Executable
+After a successful build, the output binary will be located at:
+
+`./build/build/ImageToASCIILineArt.exe`
+
+To run the program on Windows:
+
+`.\build\build\ImageToASCIILineArt.exe`
+
+To run the program on macOS/Linux (or WSL):
+
+`./build/build/ImageToASCIILineArt`
 
 # On Adding Features
 
