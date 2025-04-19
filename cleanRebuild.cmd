@@ -1,3 +1,4 @@
+@echo off
 setlocal
 
 @echo off
@@ -32,7 +33,7 @@ if "%RUN_TESTS%" == 1 (
 )
 
 
-set INPUT_BMP=sample_inputs\example.bmp
+set INPUT_BMP=sample_inputs\example2.bmp
 set EXE_PATH=build\ImageToASCIILineArt.exe
 set OUTPUT_BMP=build\ImageOutput.txt
 
@@ -55,5 +56,5 @@ if exist %INPUT_BMP% (
 
 echo ASCII art output is located at "%OUTPUT_BMP%".
 
-
+@echo off
 endlocal
