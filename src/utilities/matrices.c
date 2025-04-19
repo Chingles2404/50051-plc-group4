@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <math.h>
-#include "edge_detection.h"
+#include "matrices.h"
+
 
 int ** create2DArray(int numberRows, int numberCols) {
     int rowIndex;
@@ -84,6 +84,26 @@ Matrix* createMatrixFromFlatArray(int rows, int cols, const int values[]) {
     return m;
 }
 
+Matrix* convertToAsciiMatrix(Matrix* edgeMatrix) {
+    // We use 3 by 3 for testing
+    if (!edgeMatrix || edgeMatrix->numberRows < 3 || edgeMatrix->numberCols < 3) {
+        return NULL;
+    }
+
+    Matrix* asciiMatrix = createMatrix(3, 3);
+    if (!asciiMatrix) {
+        return NULL;
+    }
+
+    for (int y = 0; y < 3; y++) {
+        for (int x = 0; x < 3; x++) {
+            int val = getMatrixElement(edgeMatrix, y, x);
+            setMatrixElement(asciiMatrix, y, x, (val > 128) ? 1 : 0);
+        }
+    }
+
+    return asciiMatrix;
+}
 
 Matrix * createMatrixWithRemovedPadding(Matrix *originalMatrix, int paddingAmountToRemove) {
     /* If paddingAmountToRemove is 1, that means we have to remove the original matrix with 1 layer of zero
@@ -189,120 +209,4 @@ int matrixDotProduct(Matrix * matrix1, Matrix * matrix2, int kernelSize) {
         }
     }
     return sum;
-}
-
-Matrix * applyKernel(Matrix * matrix, Matrix * kernel) {
-    Matrix * newMatrix, * paddedMatrix, * surroundingElements;
-    int temp, radius;
-    int row, col;
-    if (kernel->numberRows % 2 == 0 || kernel->numberRows != kernel->numberCols) {
-        printf("wrong size");
-        return matrix;
-    }
-
-    newMatrix = createMatrix(matrix->numberRows, matrix->numberCols);
-    paddedMatrix = createPaddedMatrixWithZeros(matrix, kernel->numberRows / 2);
-    radius = kernel->numberRows / 2;
-    
-    for (row = radius; row < matrix->numberRows + radius; row++) {
-        for (col = radius; col < matrix->numberCols + radius; col++) {
-            surroundingElements = getSurroundingElements(paddedMatrix, row, col, kernel->numberRows);
-            temp = matrixDotProduct(surroundingElements, kernel, kernel->numberRows);
-            setMatrixElement(newMatrix, row - radius, col - radius, temp);
-            freeMatrix(surroundingElements);
-        }
-    }
-    freeMatrix(paddedMatrix);
-    return newMatrix;
-}
-
-int pythagoreanAddition(int x, int y) {
-    return (int) sqrt(x * x + y * y);
-}
-
-Matrix * getGradientOfPixel(Matrix * target, Matrix * xKernel, Matrix * yKernel) {
-    Matrix * gx = applyKernel(target, xKernel);
-    Matrix * gy = applyKernel(target, yKernel);
-    Matrix * g = createMatrix(target->numberRows, target->numberCols);
-
-    int row, col;
-    for (row = 0; row < g->numberRows; row++) {
-        for (col = 0; col < g->numberCols; col++) {
-            int x = getMatrixElement(gx, row, col);
-            int y = getMatrixElement(gy, row, col);
-            int gradient = pythagoreanAddition(x, y);
-            setMatrixElement(g, row, col, gradient);
-        }
-    }
-    freeMatrix(gx);
-    freeMatrix(gy);
-
-    return g;
-}
-
-Matrix * gradientPipeline(Matrix * target) {
-    Matrix * xKernel = createMatrix(3, 3);
-    setMatrixElement(xKernel, 0, 0, -1);
-    setMatrixElement(xKernel, 0, 1, 0);
-    setMatrixElement(xKernel, 0, 2, 1);
-    setMatrixElement(xKernel, 1, 0, -2);
-    setMatrixElement(xKernel, 1, 1, 0);
-    setMatrixElement(xKernel, 1, 2, 2);
-    setMatrixElement(xKernel, 2, 0, -1);
-    setMatrixElement(xKernel, 2, 1, 0);
-    setMatrixElement(xKernel, 2, 2, 1);
-
-    Matrix * yKernel = createMatrix(3, 3);
-    setMatrixElement(yKernel, 0, 0, -1);
-    setMatrixElement(yKernel, 0, 1, -2);
-    setMatrixElement(yKernel, 0, 2, -1);
-    setMatrixElement(yKernel, 1, 0, 0);
-    setMatrixElement(yKernel, 1, 1, 0);
-    setMatrixElement(yKernel, 1, 2, 0);
-    setMatrixElement(yKernel, 2, 0, 1);
-    setMatrixElement(yKernel, 2, 1, 2);
-    setMatrixElement(yKernel, 2, 2, 1);
-
-    Matrix * gradient = getGradientOfPixel(target, xKernel, yKernel);
-
-    freeMatrix(xKernel);
-    freeMatrix(yKernel);
-
-    return gradient;
-}
-
-
-Matrix** chunkImage(Matrix* image, int chunkSize) {
-    int rows = image->numberRows;
-    int cols = image->numberCols;
-    
-    /* Calculate how many complete chunks we can fit */
-    int chunkRows = rows / chunkSize;
-    int chunkCols = cols / chunkSize;
-    
-    /* Allocate array of Matrix pointers */
-    Matrix** chunks = (Matrix**)malloc(chunkRows * chunkCols * sizeof(Matrix*));
-    if (chunks == NULL) return NULL;
-    
-    int chunkIndex = 0;
-    for (int r = 0; r < chunkRows; r++) {
-        for (int c = 0; c < chunkCols; c++) {
-            /* Create a new matrix for this chunk */
-            chunks[chunkIndex] = createMatrix(chunkSize, chunkSize);
-            
-            /* Fill with data from the original image */
-            for (int y = 0; y < chunkSize; y++) {
-                for (int x = 0; x < chunkSize; x++) {
-                    int srcY = r * chunkSize + y;
-                    int srcX = c * chunkSize + x;
-                    int val = getMatrixElement(image, srcY, srcX);
-                    setMatrixElement(chunks[chunkIndex], y, x, val);
-                }
-            }
-            
-            chunkIndex++;
-        }
-    }
-    
-    return chunks;
 }

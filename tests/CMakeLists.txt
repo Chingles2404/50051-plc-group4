@@ -1,12 +1,24 @@
-add_executable(test_utils
-    test_utils_main.c
-    utils/test_utils.c
-    ${CMAKE_SOURCE_DIR}/src/edge_detection/edge_detection_utils.c
+# Combine all tests into one executable
+add_executable(runAllTests
+    ${CMAKE_SOURCE_DIR}/tests/test_main.c
+
+    ${CMAKE_SOURCE_DIR}/src/utilities/matrices.c
+    ${CMAKE_SOURCE_DIR}/tests/utilities/test_matrices.c
+
+
+    ${CMAKE_SOURCE_DIR}/src/ascii/ascii.c
+    ${CMAKE_SOURCE_DIR}/tests/ascii/test_ascii.c
 )
 
-target_include_directories(test_utils PRIVATE
-    ${CMAKE_SOURCE_DIR}/src/edge_detection
-    ${CMAKE_CURRENT_SOURCE_DIR}/utils
+target_include_directories(runAllTests PRIVATE
+
+    ${CMAKE_SOURCE_DIR}/src/utilities
+    ${CMAKE_SOURCE_DIR}/tests/utilities
+
+    ${CMAKE_SOURCE_DIR}/src/ascii
+    ${CMAKE_SOURCE_DIR}/tests/ascii
 )
 
-add_test(NAME utils COMMAND test_utils)
+target_link_libraries(runAllTests PRIVATE ascii edgeDetection utilities)
+
+add_test(NAME runAllTests COMMAND runAllTests)

@@ -3,28 +3,10 @@
 #include <string.h>
 #include "bitmap_parser.h"
 #include "edge_detection.h"
-#include "ascii_main.h"
+#include "ascii.h"
+#include "matrices.h"
 
-Matrix* convertToAsciiMatrix(Matrix* edgeMatrix) {
-    // We use 3 by 3 for testing
-    if (!edgeMatrix || edgeMatrix->numberRows < 3 || edgeMatrix->numberCols < 3) {
-        return NULL;
-    }
 
-    Matrix* asciiMatrix = createMatrix(3, 3);
-    if (!asciiMatrix) {
-        return NULL;
-    }
-
-    for (int y = 0; y < 3; y++) {
-        for (int x = 0; x < 3; x++) {
-            int val = getMatrixElement(edgeMatrix, y, x);
-            setMatrixElement(asciiMatrix, y, x, (val > 128) ? 1 : 0);
-        }
-    }
-
-    return asciiMatrix;
-}
 
 int main(int argc, char **argv) {
     if (argc < 2) {

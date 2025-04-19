@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <assert.h>
-#include "edge_detection.h"
-#include "test_utils.h"
+#include "matrices.h"
+#include "test_matrices.h"
 
 void test_create_and_free_2DArray() {
 

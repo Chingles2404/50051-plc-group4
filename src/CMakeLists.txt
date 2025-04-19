@@ -6,11 +6,10 @@ In our case, utils is the library. utils.c is the source file.
 
 As utils.c has its own inclusion of headers in the same directory (utils.h), we can opt it out here
 ]]
-add_library(edgeDetection edge_detection/edge_detection_main.c edge_detection/edge_detection_utils.c)
-add_library(ascii ascii/ascii_main.c)
+add_library(utilities utilities/matrices.c)
+add_library(edgeDetection edge_detection/edge_detection_main.c edge_detection/edge_detection.c)
+add_library(ascii ascii/ascii.c)
 add_library(processBitmap process_bitmap/bitmap_main.c process_bitmap/bitmap_parser.c)
-
-target_link_libraries(ascii PUBLIC edgeDetection) # We use the Matrix structure from edgeDetection 
 
 #[[
 The following line tells CMake that the target named utils library executable depends on the path ${CMAKE_CURRENT_SOURCE_DIR}/util
@@ -26,6 +25,7 @@ INTERFACE: Only the targets that link against this target will use these include
 PUBLIC: Means both the target itself and any target that links against it will use these include directories.
 
 ]]#
+target_include_directories(utilities PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/utilities)
 target_include_directories(edgeDetection PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/edge_detection)
 target_include_directories(ascii PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/ascii)
 target_include_directories(processBitmap PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/process_bitmap)
@@ -33,7 +33,9 @@ target_include_directories(processBitmap PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/proc
 # Assuming our main application file is main.c, it is compiled to create the ImageToASCIILineArt executable.
 add_executable(ImageToASCIILineArt main.c)
 
-# This links the utils library you just added above (add_library()) to your executable you just created above (add_executable())
+target_link_libraries(ascii PUBLIC edgeDetection utilities)
+target_link_libraries(edgeDetection PUBLIC utilities)
 target_link_libraries(ImageToASCIILineArt PUBLIC edgeDetection)
 target_link_libraries(ImageToASCIILineArt PUBLIC ascii)
 target_link_libraries(ImageToASCIILineArt PUBLIC processBitmap)
+target_link_libraries(ImageToASCIILineArt PUBLIC utilities)
