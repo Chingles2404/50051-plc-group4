@@ -1,0 +1,477 @@
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include "fsm_actions.h"
+
+#include "ascii.h"
+#include "edge_detection.h"
+#include "bitmap_parser.h"
+#include "matrices.h"
+
+
+ActionStatus actionMainMenu(AppContext* ctx, void* param) {
+    printf("\n==== ASCII Art Generator ====\n");
+    printf("1. Load Image\n");
+    printf("2. Configure Settings\n");
+    printf("3. Exit\n");
+    printf("Enter your choice: ");
+    
+    int choice;
+    if (scanf("%d", &choice) != 1) {
+        clearInputBuffer();
+        printf("Invalid input. Please enter a number.\n");
+        return ACTION_FAILURE;
+    }
+    clearInputBuffer();
+    
+    /* store the user's choice in the context */
+    *(int*)param = choice;
+    
+    if (choice >= 1 && choice <= 3) {
+        return ACTION_SUCCESS;
+    } else {
+        printf("Invalid choice. Please try again.\n");
+        return ACTION_FAILURE;
+    }
+}
+
+ActionStatus actionFilePath(AppContext* ctx, void* param) {
+    if (ctx->filename) {
+        free(ctx->filename);
+        ctx->filename = NULL;
+    }
+    
+    printf("Enter image file path (or 'back' to return to main menu): ");
+    char buffer[256];
+    if (scanf("%255s", buffer) != 1) {
+        clearInputBuffer();
+        if (ctx->errorMessage) free(ctx->errorMessage);
+        ctx->errorMessage = strdup("Failed to read file path");
+        return ACTION_FAILURE;
+    }
+    clearInputBuffer();
+    
+    /* check if user wants to go back */
+    if (strcmp(buffer, "back") == 0) {
+        *(int*)param = -1; 
+        return ACTION_SUCCESS;
+    }
+    
+    ctx->filename = strdup(buffer);
+    if (ctx->filename == NULL) {
+        if (ctx->errorMessage) free(ctx->errorMessage);
+        ctx->errorMessage = strdup("Memory allocation failed");
+        return ACTION_FAILURE;
+    }
+    
+    return ACTION_SUCCESS;
+}
+
+ActionStatus actionConfigMenu(AppContext* ctx, void* param) {
+    printf("\n==== Configuration Menu ====\n");
+    printf("1. Set Resolution (current: %dx%d)\n", ctx->chunkSize, ctx->chunkSize);
+    printf("2. Set Color Mode (current: %s)\n", 
+           ctx->colorMode == 0 ? "Grayscale" : "Color");
+    printf("3. Return to Main Menu\n");
+    printf("Enter your choice: ");
+    
+    int choice;
+    if (scanf("%d", &choice) != 1) {
+        clearInputBuffer();
+        printf("Invalid input. Please enter a number.\n");
+        return ACTION_FAILURE;
+    }
+    clearInputBuffer();
+    
+    *(int*)param = choice;
+    
+    if (choice >= 1 && choice <= 3) {
+        return ACTION_SUCCESS;
+    } else {
+        printf("Invalid choice. Please try again.\n");
+        return ACTION_FAILURE;
+    }
+}
+
+ActionStatus actionResolutionConfig(AppContext* ctx, void* param) {
+    printf("\nSet Resolution\n");
+    printf("Enter chunk size (3, 5, or 7): ");
+    
+    int size;
+    if (scanf("%d", &size) != 1) {
+        clearInputBuffer();
+        printf("Invalid input. Please enter a number.\n");
+        return ACTION_FAILURE;
+    }
+    clearInputBuffer();
+    
+    if (size != 3 && size != 5 && size != 7) {
+        printf("Invalid chunk size. Please choose 3, 5, or 7.\n");
+        return ACTION_FAILURE;
+    }
+    
+    ctx->chunkSize = size;
+    printf("Resolution set to %dx%d\n", size, size);
+    return ACTION_SUCCESS;
+}
+
+ActionStatus actionColorModeConfig(AppContext* ctx, void* param) {
+    printf("\nSet Color Mode\n");
+    printf("1. Grayscale\n");
+    printf("2. Color (ANSI Terminal Colors)\n");
+    printf("Enter your choice: ");
+    
+    int choice;
+    if (scanf("%d", &choice) != 1) {
+        clearInputBuffer();
+        printf("Invalid input. Please enter a number.\n");
+        return ACTION_FAILURE;
+    }
+    clearInputBuffer();
+    
+    if (choice != 1 && choice != 2) {
+        printf("Invalid choice. Please try again.\n");
+        return ACTION_FAILURE;
+    }
+    
+    ctx->colorMode = choice - 1; /* 0 for Grayscale, 1 for Color */
+    printf("Color mode changed to %s\n", 
+           ctx->colorMode == 0 ? "Grayscale" : "Color");
+    return ACTION_SUCCESS;
+}
+
+ActionStatus actionPreviewChoice(AppContext* ctx, void* param) {
+    printf("\nPreview of ASCII Art\n");
+    printf("1. Adjust settings\n");
+    printf("2. Proceed with current result\n");
+    printf("Enter your choice: ");
+    
+    int choice;
+    if (scanf("%d", &choice) != 1) {
+        clearInputBuffer();
+        printf("Invalid input. Please enter a number.\n");
+        return ACTION_FAILURE;
+    }
+    clearInputBuffer();
+    
+    *(int*)param = choice;
+    
+    if (choice == 1 || choice == 2) {
+        return ACTION_SUCCESS;
+    } else {
+        printf("Invalid choice. Please try again.\n");
+        return ACTION_FAILURE;
+    }
+}
+
+ActionStatus actionFinalOutputChoice(AppContext* ctx, void* param) {
+    printf("\nOutput Options\n");
+    printf("1. Save to file\n");
+    printf("2. Display in terminal\n");
+    printf("3. Both save and display\n");
+    printf("Enter your choice: ");
+    
+    int choice;
+    if (scanf("%d", &choice) != 1) {
+        clearInputBuffer();
+        printf("Invalid input. Please enter a number.\n");
+        return ACTION_FAILURE;
+    }
+    clearInputBuffer();
+    
+    *(int*)param = choice;
+    
+    if (choice >= 1 && choice <= 3) {
+        return ACTION_SUCCESS;
+    } else {
+        printf("Invalid choice. Please try again.\n");
+        return ACTION_FAILURE;
+    }
+}
+
+ActionStatus actionOutputFileName(AppContext* ctx, void* param) {
+    printf("\nEnter filename to save ASCII art (default: output.txt): ");
+    char buffer[256];
+    if (fgets(buffer, sizeof(buffer), stdin) == NULL) {
+        if (ctx->errorMessage) free(ctx->errorMessage);
+        ctx->errorMessage = strdup("Failed to read filename");
+        return ACTION_FAILURE;
+    }
+    
+    size_t len = strlen(buffer);
+    if (len > 0 && buffer[len-1] == '\n') {
+        buffer[len-1] = '\0';
+    }
+    
+    /* use default if empty */
+    if (buffer[0] == '\0') {
+        strcpy(buffer, "output.txt");
+    }
+    
+    /* store the filename in param */
+    char* filename = (char*)param;
+    strcpy(filename, buffer);
+    
+    return ACTION_SUCCESS;
+}
+
+/* validation actions */
+
+ActionStatus actionValidateFilePath(AppContext* ctx, void* param) {
+    if (ctx->filename == NULL) {
+        if (ctx->errorMessage) free(ctx->errorMessage);
+        ctx->errorMessage = strdup("No file specified");
+        return ACTION_FAILURE;
+    }
+    
+    FILE* file = fopen(ctx->filename, "rb");
+    if (file == NULL) {
+        if (ctx->errorMessage) free(ctx->errorMessage);
+        ctx->errorMessage = strdup("File not found or cannot be opened");
+        return ACTION_FAILURE;
+    }
+    
+    fclose(file);
+    return ACTION_SUCCESS;
+}
+
+/* Transform Actions */
+
+ActionStatus actionParseBitmap(AppContext* ctx, void* param) {
+    if (ctx->parser != NULL) {
+        freeBitmapParser(ctx->parser);
+    }
+    
+    ctx->parser = createBitmapParser();
+    if (ctx->parser == NULL) {
+        if (ctx->errorMessage) free(ctx->errorMessage);
+        ctx->errorMessage = strdup("Failed to create bitmap parser");
+        return ACTION_FAILURE;
+    }
+    
+    if (!parseFile(ctx->parser, ctx->filename)) {
+        if (ctx->errorMessage) free(ctx->errorMessage);
+        ctx->errorMessage = strdup(ctx->parser->error_message ? 
+                                  ctx->parser->error_message : "Unknown parsing error");
+        return ACTION_FAILURE;
+    }
+    
+    return ACTION_SUCCESS;
+}
+
+ActionStatus actionConvertToGrayscale(AppContext* ctx, void* param) {
+    /* Grayscale conversion is already done in the parser */
+    /* But we need to convert it to our matrix format */
+    
+    if (ctx->parser == NULL || ctx->parser->pixelData == NULL) {
+        if (ctx->errorMessage) free(ctx->errorMessage);
+        ctx->errorMessage = strdup("No bitmap data available");
+        return ACTION_FAILURE;
+    }
+    
+    int width = ctx->parser->infoHeader.width;
+    int height = ctx->parser->infoHeader.height;
+    
+ 
+    if (ctx->image != NULL) {
+        freeMatrix(ctx->image);
+    }
+    
+    /* creating new matrix for the image */
+    ctx->image = createMatrix(height, width);
+    if (ctx->image == NULL) {
+        if (ctx->errorMessage) free(ctx->errorMessage);
+        ctx->errorMessage = strdup("Failed to allocate memory for image matrix");
+        return ACTION_FAILURE;
+    }
+    
+    /* copy grayscale data to the matrix */
+    for (int y = 0; y < height; y++) {
+        for (int x = 0; x < width; x++) {
+            int idx = y * width + x;
+            setMatrixElement(ctx->image, y, x, ctx->parser->pixelData[idx]);
+        }
+    }
+    
+    return ACTION_SUCCESS;
+}
+
+ActionStatus actionDetectEdges(AppContext* ctx, void* param) {
+    if (ctx->image == NULL) {
+        if (ctx->errorMessage) free(ctx->errorMessage);
+        ctx->errorMessage = strdup("No image data available");
+        return ACTION_FAILURE;
+    }
+    
+    if (ctx->edges != NULL) {
+        freeMatrix(ctx->edges);
+    }
+    
+    /* Apply edge detection */
+    ctx->edges = gradientPipeline(ctx->image);
+    if (ctx->edges == NULL) {
+        if (ctx->errorMessage) free(ctx->errorMessage);
+        ctx->errorMessage = strdup("Edge detection failed");
+        return ACTION_FAILURE;
+    }
+    
+    printf("Edge detection completed. Proceeding to image chunking...\n");
+    return ACTION_SUCCESS;
+}
+
+ActionStatus actionChunkImage(AppContext* ctx, void* param) {
+    if (ctx->edges == NULL) {
+        if (ctx->errorMessage) free(ctx->errorMessage);
+        ctx->errorMessage = strdup("No edge data available");
+        return ACTION_FAILURE;
+    }
+    
+    /* Calculate chunks */
+    ctx->chunkRows = ctx->edges->numberRows / ctx->chunkSize;
+    ctx->chunkCols = ctx->edges->numberCols / ctx->chunkSize;
+    ctx->totalChunks = ctx->chunkRows * ctx->chunkCols;
+    
+    if (ctx->chunks != NULL) {
+        for (int i = 0; i < ctx->totalChunks; i++) {
+            if (ctx->chunks[i]) freeMatrix(ctx->chunks[i]);
+        }
+        free(ctx->chunks);
+    }
+    
+    /* Create chunks */
+    ctx->chunks = chunkImage(ctx->edges, ctx->chunkSize);
+    if (ctx->chunks == NULL) {
+        if (ctx->errorMessage) free(ctx->errorMessage);
+        ctx->errorMessage = strdup("Failed to chunk image");
+        return ACTION_FAILURE;
+    }
+    
+    return ACTION_SUCCESS;
+}
+
+/* Map Actions */
+
+ActionStatus actionMapToAscii(AppContext* ctx, void* param) {
+    if (ctx->chunks == NULL || ctx->totalChunks <= 0) {
+        if (ctx->errorMessage) free(ctx->errorMessage);
+        ctx->errorMessage = strdup("No image chunks available");
+        return ACTION_FAILURE;
+    }
+    
+    if (ctx->asciiArt != NULL) {
+        free(ctx->asciiArt);
+    }
+    
+    /* allocating memory for ASCII art string */
+    /* +1 for newline after each row, +1 for final null terminator */
+    ctx->asciiArt = (char*)malloc((ctx->chunkRows * (ctx->chunkCols + 1) + 1) * sizeof(char));
+    if (ctx->asciiArt == NULL) {
+        if (ctx->errorMessage) free(ctx->errorMessage);
+        ctx->errorMessage = strdup("Failed to allocate memory for ASCII art");
+        return ACTION_FAILURE;
+    }
+    
+    /* mapping each chunk to an ASCII character */
+    for (int r = 0; r < ctx->chunkRows; r++) {
+        for (int c = 0; c < ctx->chunkCols; c++) {
+            int chunkIndex = r * ctx->chunkCols + c;
+            
+            Matrix* asciiMatrix = convertToAsciiMatrix(ctx->chunks[chunkIndex]);
+            if (asciiMatrix == NULL) {
+                ctx->asciiArt[r * (ctx->chunkCols + 1) + c] = '?';
+                continue;
+            }
+            
+            char ascii = find_best_ascii(asciiMatrix);
+            ctx->asciiArt[r * (ctx->chunkCols + 1) + c] = ascii;
+            freeMatrix(asciiMatrix);
+        }
+   
+        ctx->asciiArt[r * (ctx->chunkCols + 1) + ctx->chunkCols] = '\n';
+    }
+    ctx->asciiArt[ctx->chunkRows * (ctx->chunkCols + 1)] = '\0';
+    
+    return ACTION_SUCCESS;
+}
+
+/* Display Actions */
+
+ActionStatus actionDisplayPreview(AppContext* ctx, void* param) {
+    if (ctx->asciiArt == NULL) {
+        if (ctx->errorMessage) free(ctx->errorMessage);
+        ctx->errorMessage = strdup("No ASCII art available");
+        return ACTION_FAILURE;
+    }
+    
+    printf("\nASCII Art Preview:\n");
+    printf("%s\n", ctx->asciiArt);
+    
+    return ACTION_SUCCESS;
+}
+
+ActionStatus actionDisplayInTerminal(AppContext* ctx, void* param) {
+    if (ctx->asciiArt == NULL) {
+        if (ctx->errorMessage) free(ctx->errorMessage);
+        ctx->errorMessage = strdup("No ASCII art available to display");
+        return ACTION_FAILURE;
+    }
+    
+    printf("\n==== ASCII Art ====\n\n");
+    
+    /* If color mode is enabled, try to use ANSI colors */
+    if (ctx->colorMode == 1) {
+        /* this is a very simple implementation of color output because it is depenedent on the terminal ability so we might take this out*/
+        for (size_t i = 0; i < strlen(ctx->asciiArt); i++) {
+            char c = ctx->asciiArt[i];
+            if (c == '\n') {
+                printf("\n");
+            } else if (c != ' ') {
+                /* Use different colors for different characters */
+                int color = (c % 6) + 31; /* ANSI colors 31-36 (red, green, yellow, blue, magenta, cyan) */
+                printf("\033[%dm%c\033[0m", color, c);
+            } else {
+                printf(" ");
+            }
+        }
+    } else {
+        /* just print the ASCII art as is */
+        printf("%s", ctx->asciiArt);
+    }
+    
+    printf("\nPress Enter to continue...");
+    getchar(); /* wait for user to Enter */
+    
+    return ACTION_SUCCESS;
+}
+
+/* Output Actions */
+
+ActionStatus actionSaveToFile(AppContext* ctx, void* param) {
+    if (ctx->asciiArt == NULL) {
+        if (ctx->errorMessage) free(ctx->errorMessage);
+        ctx->errorMessage = strdup("No ASCII art available to save");
+        return ACTION_FAILURE;
+    }
+    
+    const char* filename = (const char*)param;
+    FILE* outFile = fopen(filename, "w");
+    if (outFile == NULL) {
+        if (ctx->errorMessage) free(ctx->errorMessage);
+        ctx->errorMessage = strdup("Failed to open output file");
+        return ACTION_FAILURE;
+    }
+    
+    fprintf(outFile, "%s", ctx->asciiArt);
+    fclose(outFile);
+    
+    printf("ASCII art saved to %s\n", filename);
+    return ACTION_SUCCESS;
+}
+
+
+
+void clearInputBuffer() {
+    int c;
+    while ((c = getchar()) != '\n' && c != EOF);
+}

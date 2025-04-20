@@ -61,7 +61,7 @@ typedef struct {
 BitmapParser* createBitmapParser();
 void freeBitmapParser(BitmapParser* parser);
 bool parseFile(BitmapParser* parser, const char* filename);
-ParserState processState(BitmapParser* parser);
+ParserState processReadingState(BitmapParser* parser);
 
 
 ParserState handleInitState(BitmapParser* parser, const char* filename);

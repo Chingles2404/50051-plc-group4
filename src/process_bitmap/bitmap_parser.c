@@ -66,13 +66,13 @@ bool parseFile(BitmapParser* parser, const char* filename) {
     
     /* process states until complete or error */
     while (parser->state != STATE_COMPLETED && parser->state != STATE_ERROR) {
-        parser->state = processState(parser);
+        parser->state = processReadingState(parser);
     }
     
     return parser->state == STATE_COMPLETED;
 }
 
-ParserState processState(BitmapParser* parser) {
+ParserState processReadingState(BitmapParser* parser) { // This may be replaced with processState in the future
     switch (parser->state) {
         case STATE_INIT:
             return STATE_ERROR; /* Should never happen - initialization requires filename */

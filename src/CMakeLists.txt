@@ -10,6 +10,7 @@ add_library(utilities utilities/matrices.c)
 add_library(edgeDetection edge_detection/edge_detection_main.c edge_detection/edge_detection.c)
 add_library(ascii ascii/ascii.c)
 add_library(processBitmap process_bitmap/bitmap_main.c process_bitmap/bitmap_parser.c)
+add_library(actions utilities/fsm_actions.c)
 add_library(appfsm app_fsm.c)
 #[[
 The following line tells CMake that the target named utils library executable depends on the path ${CMAKE_CURRENT_SOURCE_DIR}/util
@@ -29,16 +30,31 @@ target_include_directories(utilities PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/utilitie
 target_include_directories(edgeDetection PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/edge_detection)
 target_include_directories(ascii PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/ascii)
 target_include_directories(processBitmap PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/process_bitmap)
+target_include_directories(actions PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/ascii
+    ${CMAKE_CURRENT_SOURCE_DIR}/edge_detection
+    ${CMAKE_CURRENT_SOURCE_DIR}/process_bitmap
+    ${CMAKE_CURRENT_SOURCE_DIR}/utilities
+) 
+
+# For fsm_logic.h's import of matrices.h: We can "obtain" it as a proxy from actions.c This works because fsm_logic.h's usage begins in actions.c
 target_include_directories(appfsm PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 # Assuming our main application file is main.c, it is compiled to create the ImageToASCIILineArt executable.
 add_executable(ImageToASCIILineArt main.c)
 
-target_link_libraries(appfsm PUBLIC utilities ascii edgeDetection  processBitmap)
-
-target_link_libraries(ascii PUBLIC edgeDetection utilities)
+# Internal dependencies
 target_link_libraries(edgeDetection PUBLIC utilities)
-target_link_libraries(ImageToASCIILineArt PUBLIC edgeDetection)
-target_link_libraries(ImageToASCIILineArt PUBLIC ascii)
-target_link_libraries(ImageToASCIILineArt PUBLIC processBitmap)
-target_link_libraries(ImageToASCIILineArt PUBLIC utilities)
+
+# This also internally links all of edge's internal dependencies - utilities library
+target_link_libraries(ascii PUBLIC edgeDetection)
+
+# This also internally links all of ascii's internal dependencies - edgeDetection + ascii
+target_link_libraries(actions PUBLIC ascii)
+
+# This also internally links all of ascii, processBitmap and actions's internal dependencies
+target_link_libraries(appfsm PUBLIC ascii processBitmap actions)
+
+# Linking only the FSM pulls in the rest of the internal dependencies as well.
+target_link_libraries(ImageToASCIILineArt PUBLIC appfsm)
