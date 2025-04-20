@@ -14,6 +14,22 @@ if exist Testing (
 )
 echo Testing directory removed.
 
+REM Detect compiler and build tool
+where make >nul 2>&1
+if %errorlevel%==0 (
+    set "MAKE_TOOL=make"
+    echo Using make
+) else (
+    where mingw32-make >nul 2>&1
+    if %errorlevel%==0 (
+        set "MAKE_TOOL=mingw32-make"
+        echo Using mingw32-make
+    ) else (
+        echo No suitable make tool found (neither make nor mingw32-make)
+        exit /b 1
+    )
+)
+
 REM Configure the project with CMake using MinGW Makefiles
 cmake -S . -B build -G "MinGW Makefiles"
 if errorlevel 1 (
@@ -21,9 +37,14 @@ if errorlevel 1 (
     exit /b 1
 )
 
-REM Build the project (assuming you have mingw32-make installed)
+REM Build
 cd build
-make
+%MAKE_TOOL%
+if errorlevel 1 (
+    echo [ERROR] Build failed.
+    exit /b 1
+)
+cd ..
 
 
 set INPUT_BMP=sample_inputs\example.bmp
@@ -43,7 +64,6 @@ if "%RUN_TESTS%" == "1" (
 
 
 REM Run the compiled ASCII converter with an input BMP
-cd ..
 
 REM Run the program
 if exist %INPUT_BMP% (
@@ -61,7 +81,7 @@ if exist %INPUT_BMP% (
     
     %EXE_PATH%
 ) else (
-    echo Input BMP file "%INPUT_BMP%" not found.
+    echo sample_inputs\example.bmp cannot be found!
 )
 
 
