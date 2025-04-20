@@ -49,7 +49,7 @@ cd ..
 
 set INPUT_BMP=sample_inputs\example.bmp
 set EXE_PATH=build\ImageToASCIILineArt.exe
-set OUTPUT_BMP=build\ImageOutput.txt
+set OUTPUT_TXT=build\ImageOutput.txt
 
 REM Assumption is that we are in /build directory. So the path is relative
 set TESTS_EXE=tests\runAllTests.exe

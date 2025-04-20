@@ -10,7 +10,11 @@
 #include "string_helpers.h"
 
 int main(int argc, char **argv) {
+    
     AppContext* context;
+    int retryCount;
+    AppState newState;
+
     initialiseFSM();
     
     /* Create application context */
@@ -29,9 +33,24 @@ int main(int argc, char **argv) {
         context->state = STATE_INPUT_MainMenu;
     }
     
-    /* Main FSM loop */
+    retryCount = 0;
+
     while (context->state != STATE_EXIT) {
-        context->state = processState(context);
+        printf("--- Main loop: current state is %d ---\n", context->state);
+        newState = processState(context);
+        printf("--- Main loop: new state is %d ---\n", newState);
+
+        if (newState == context->state) {
+            retryCount++;
+            if (retryCount >= 3) {
+                printf("Warning: State did not change after 3 attempts. Exiting to avoid infinite loop.\n");
+                break;
+            }
+        } else {
+            retryCount = 0;
+        }
+
+        context->state = newState;
     }
     
     printf("Exiting ASCII Art Generator. Goodbye!\n");

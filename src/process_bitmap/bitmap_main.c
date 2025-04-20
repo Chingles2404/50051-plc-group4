@@ -55,7 +55,7 @@ int main(int argc, char **argv) {
         /* and implement the edge detection and ASCII mapping */
         
         /* this i just did to test */
-        outFile = fopen("output.txt", "w");
+        outFile = fopen("ImageOutput.txt", "w");
         if (outFile != NULL) {
             for (y = 0; y < height; y += 2) {  /* Skip rows to maintain aspect ratio */
                 for (x = 0; x < width; x++) {
@@ -78,7 +78,7 @@ int main(int argc, char **argv) {
                 fprintf(outFile, "\n");
             }
             fclose(outFile);
-            printf("test ASCII representation saved to output.txt\n");
+            printf("test ASCII representation saved to ImageOutput.txt\n");
         }
     }
     

@@ -86,6 +86,7 @@ typedef struct {
     int chunkRows;           /* Number of chunk rows */
     int chunkCols;           /* Number of chunk columns */
     char* errorMessage;      /* Last error message */
+    int resumeAfterConfig; 
 } AppContext;
 
 /* Action function type */

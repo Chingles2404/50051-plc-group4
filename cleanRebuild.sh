@@ -35,11 +35,11 @@ fi
 # Run binary
 INPUT_BMP="sample_inputs/example.bmp"
 EXE_PATH="build/ImageToASCIILineArt"
-OUTPUT_BMP="build/ImageOutput.txt"
+OUTPUT_TXT="build/ImageOutput.txt"
 
 if [ -f "$INPUT_BMP" ]; then
     echo "Info: Converting image to ASCII art..."
-    echo "Info: Output will be saved to $OUTPUT_BMP"
+    echo "Info: Output will be saved to $OUTPUT_TXT"
 
     "$EXE_PATH"
 else

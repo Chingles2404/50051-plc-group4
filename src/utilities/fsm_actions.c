@@ -351,6 +351,7 @@ ActionStatus actionChunkImage(AppContext* ctx, void* param) {
             if (ctx->chunks[i]) freeMatrix(ctx->chunks[i]);
         }
         free(ctx->chunks);
+        ctx->chunks = NULL;
     }
     
     /* Create chunks */
@@ -460,6 +461,7 @@ ActionStatus actionDisplayInTerminal(AppContext* ctx, void* param) {
     }
     
     printf("\nPress Enter to continue...");
+    clearInputBuffer();
     getchar(); /* wait for user to Enter */
     
     return ACTION_SUCCESS;
