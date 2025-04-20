@@ -3,8 +3,6 @@
 .vscode
 
 # Executables and output
-**/ascii_matcher
-**/edge_detection
 **/output.txt
 **.o
 **.exe

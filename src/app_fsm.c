@@ -7,6 +7,16 @@
 
 /* Transition table */
 static Transition transitions[] = {
+    
+    // /* Transition Structure */
+    // typedef struct {
+    //     AppState current; /* Current state */
+    //     ActionType action; /* Action to perform */
+    //     void* actionParam; /* Parameters for the action (if any) */
+    //     AppState success; /* Next state if action succeeds */
+    //     AppState failure; /* Next state if action fails */
+    // } Transition;
+
     /* Main Menu transitions */
     {STATE_INPUT_MainMenu, ACTION_INPUT, NULL, STATE_GOTO_LoadImage, STATE_INPUT_MainMenu},
     
