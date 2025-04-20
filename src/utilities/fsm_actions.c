@@ -98,6 +98,7 @@ ActionStatus actionConfigMenu(AppContext* ctx, void* param) {
 
 ActionStatus actionResolutionConfig(AppContext* ctx, void* param) {
     int size;
+    int i;
     printf("\nSet Resolution\n");
     printf("Enter chunk size (3, 5, or 7): ");
     
@@ -115,7 +116,28 @@ ActionStatus actionResolutionConfig(AppContext* ctx, void* param) {
     
     ctx->chunkSize = size;
     printf("Resolution set to %dx%d\n", size, size);
+
+    /* freeing downstream processed data */
+    if (ctx->chunks != NULL) {
+        for (i = 0; i < ctx->totalChunks; i++) {
+            if (ctx->chunks[i]) freeMatrix(ctx->chunks[i]);
+        }
+        free(ctx->chunks);
+        ctx->chunks = NULL;
+    }
+
+    if (ctx->asciiArt != NULL) {
+        free(ctx->asciiArt);
+        ctx->asciiArt = NULL;
+    }
+
+    /* optional: reset dimensions so they get recalculated */
+    ctx->chunkRows = 0;
+    ctx->chunkCols = 0;
+    ctx->totalChunks = 0;
+
     return ACTION_SUCCESS;
+
 }
 
 
