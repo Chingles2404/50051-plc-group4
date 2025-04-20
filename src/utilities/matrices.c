@@ -74,29 +74,36 @@ Matrix *createPaddedMatrixWithZeros(Matrix *originalMatrix, int paddingAmount) {
     };
  */
 Matrix* createMatrixFromFlatArray(int rows, int cols, const int values[]) {
-    Matrix* m = createMatrix(rows, cols);
+    Matrix* m;
+    int i;
+    int j;
+    m = createMatrix(rows, cols);
     if (!m) return NULL;
 
-    for (int i = 0; i < rows; ++i)
-        for (int j = 0; j < cols; ++j)
+    for (i = 0; i < rows; ++i)
+        for (j = 0; j < cols; ++j)
             setMatrixElement(m, i, j, values[i * cols + j]);
 
     return m;
 }
 
 Matrix* convertToAsciiMatrix(Matrix* edgeMatrix) {
-    // We use 3 by 3 for testing
+    /* We use 3 by 3 for testing */
+    Matrix* asciiMatrix;
+    int x;
+    int y;
+
     if (!edgeMatrix || edgeMatrix->numberRows < 3 || edgeMatrix->numberCols < 3) {
         return NULL;
     }
 
-    Matrix* asciiMatrix = createMatrix(3, 3);
+    asciiMatrix = createMatrix(3, 3);
     if (!asciiMatrix) {
         return NULL;
     }
 
-    for (int y = 0; y < 3; y++) {
-        for (int x = 0; x < 3; x++) {
+    for (y = 0; y < 3; y++) {
+        for (x = 0; x < 3; x++) {
             int val = getMatrixElement(edgeMatrix, y, x);
             setMatrixElement(asciiMatrix, y, x, (val > 128) ? 1 : 0);
         }
@@ -178,16 +185,18 @@ void freeMatrix(Matrix *matrix) {
 }
 
 Matrix * getSurroundingElements(Matrix * matrix, int targetRow, int targetCol, int kernelSize) {
-    Matrix * newMatrix = createMatrix(kernelSize, kernelSize);
+    Matrix * newMatrix;
     int radius = kernelSize / 2;
     int temp;
+    int row, col;
+    
+    newMatrix = createMatrix(kernelSize, kernelSize);
 
     if (targetRow < radius || targetRow >= matrix->numberRows - radius ||
         targetCol < radius || targetCol >= matrix->numberCols - radius) {
         return newMatrix;
     }
 
-    int row, col;
     for (row = 0; row < kernelSize; row++) {
         for (col = 0; col < kernelSize; col++) {
             temp = getMatrixElement(matrix, targetRow + row - radius, targetCol + col - radius);

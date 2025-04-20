@@ -5,7 +5,7 @@ project(ImageToASCIILineArt)
 set(CMAKE_C_STANDARD 99)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 
-add_compile_options(-Wall -Werror -pedantic)
+add_compile_options(-Wall -Werror -ansi -pedantic)
 
 enable_testing()
 

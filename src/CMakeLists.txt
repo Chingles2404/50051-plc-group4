@@ -6,7 +6,7 @@ In our case, utils is the library. utils.c is the source file.
 
 As utils.c has its own inclusion of headers in the same directory (utils.h), we can opt it out here
 ]]
-add_library(utilities utilities/matrices.c)
+add_library(utilities utilities/matrices.c utilities/string_helpers.c)
 add_library(edgeDetection edge_detection/edge_detection_main.c edge_detection/edge_detection.c)
 add_library(ascii ascii/ascii.c)
 add_library(processBitmap process_bitmap/bitmap_main.c process_bitmap/bitmap_parser.c)
@@ -29,7 +29,10 @@ PUBLIC: Means both the target itself and any target that links against it will u
 target_include_directories(utilities PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/utilities)
 target_include_directories(edgeDetection PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/edge_detection)
 target_include_directories(ascii PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/ascii)
-target_include_directories(processBitmap PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/process_bitmap)
+target_include_directories(processBitmap PUBLIC 
+    ${CMAKE_CURRENT_SOURCE_DIR}/process_bitmap
+    ${CMAKE_CURRENT_SOURCE_DIR}/utilities
+)
 target_include_directories(actions PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${CMAKE_CURRENT_SOURCE_DIR}/ascii
@@ -45,7 +48,7 @@ target_include_directories(appfsm PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 add_executable(ImageToASCIILineArt main.c)
 
 # Internal dependencies
-target_link_libraries(edgeDetection PUBLIC utilities)
+target_link_libraries(edgeDetection PUBLIC utilities m)
 
 # This also internally links all of edge's internal dependencies - utilities library
 target_link_libraries(ascii PUBLIC edgeDetection)

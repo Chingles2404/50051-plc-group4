@@ -1,8 +1,7 @@
-CC = gcc
+# Compiler and Flags
+COMPILER = gcc
 
-# -std=c99: use C99 standard
-# -w: suppress all warnings
-CFLAGS = -std=c99 -w \
+COMPILER_FLAGS = -std=c99 -Wall -Werror -ansi -pedantic \
 	-I./src \
 	-I./src/utilities \
 	-I./src/ascii \
@@ -11,65 +10,73 @@ CFLAGS = -std=c99 -w \
 	-I./tests/utilities \
 	-I./tests/ascii
 
-# Source directories
-SOURCE_DIRECTORY = src
-TEST_DIRECTORY = tests
+# Source Directories
+APPLICATION_SOURCE_DIRECTORY = src
+UNIT_TEST_SOURCE_DIRECTORY = tests
 
-# Application source files
-SOURCE_FILES = \
-	$(SOURCE_DIRECTORY)/main.c \
-	$(SOURCE_DIRECTORY)/app_fsm.c \
-	$(SOURCE_DIRECTORY)/utilities/fsm_actions.c \
-	$(SOURCE_DIRECTORY)/utilities/matrices.c \
-	$(SOURCE_DIRECTORY)/ascii/ascii.c \
-	$(SOURCE_DIRECTORY)/edge_detection/edge_detection.c \
-	$(SOURCE_DIRECTORY)/process_bitmap/bitmap_parser.c
+# Application Source Files
+APPLICATION_SOURCE_FILES = \
+	$(APPLICATION_SOURCE_DIRECTORY)/main.c \
+	$(APPLICATION_SOURCE_DIRECTORY)/app_fsm.c \
+	$(APPLICATION_SOURCE_DIRECTORY)/utilities/fsm_actions.c \
+	$(APPLICATION_SOURCE_DIRECTORY)/utilities/matrices.c \
+	$(APPLICATION_SOURCE_DIRECTORY)/ascii/ascii.c \
+	$(APPLICATION_SOURCE_DIRECTORY)/edge_detection/edge_detection.c \
+	$(APPLICATION_SOURCE_DIRECTORY)/process_bitmap/bitmap_parser.c \
+	$(APPLICATION_SOURCE_DIRECTORY)/utilities/string_helpers.c
 
-OBJECT_FILES = $(SOURCE_FILES:.c=.o)
+APPLICATION_OBJECT_FILES = $(APPLICATION_SOURCE_FILES:.c=.o)
 
-# Test source files
-TEST_FILES = \
-	$(TEST_DIRECTORY)/test_main.c \
-	$(TEST_DIRECTORY)/ascii/test_ascii.c \
-	$(TEST_DIRECTORY)/utilities/test_matrices.c
+# Unit Test Source Files
+UNIT_TEST_FILES = \
+	$(UNIT_TEST_SOURCE_DIRECTORY)/test_main.c \
+	$(UNIT_TEST_SOURCE_DIRECTORY)/ascii/test_ascii.c \
+	$(UNIT_TEST_SOURCE_DIRECTORY)/utilities/test_matrices.c
 
-TEST_OBJECT_FILES = $(TEST_FILES:.c=.o)
+UNIT_TEST_OBJECT_FILES = $(UNIT_TEST_FILES:.c=.o)
+
+ifeq ($(OS),Windows_NT)
+    EXECUTABLE_EXTENSION = .exe # Windows has .exe
+else
+    EXECUTABLE_EXTENSION = # Linux is empty
+endif
+
+# Executables
+APPLICATION_EXECUTABLE = ImageToASCIILineArt$(EXECUTABLE_EXTENSION)
+UNIT_TEST_EXECUTABLE = runAllTests$(EXECUTABLE_EXTENSION)
 
 # Targets
-APPLICATION_EXECUTABLE = ImageToASCIILineArt.exe
-TEST_EXECUTABLE = runAllTests.exe
-
-# Declare phony targets to prevent conflicts with file names
 .PHONY: all clean run test
 
-all: $(APPLICATION_EXECUTABLE) $(TEST_EXECUTABLE)
+all: $(APPLICATION_EXECUTABLE) $(UNIT_TEST_EXECUTABLE)
 
-# Link all object files to build the main application
-# $^ = all dependencies, $@ = target filename
-$(APPLICATION_EXECUTABLE): $(OBJECT_FILES)
-	@$(CC) $^ -o $@
+$(APPLICATION_EXECUTABLE): $(APPLICATION_OBJECT_FILES)
+	@$(COMPILER) $^ -o $@ -lm
 
-# Build test binary
-NON_MAIN_OBJECT_FILES = $(filter-out src/main.o, $(OBJECT_FILES))
+APPLICATION_OBJECT_FILES_WITHOUT_MAIN = $(filter-out src/main.o, $(APPLICATION_OBJECT_FILES))
 
-$(TEST_EXECUTABLE): $(NON_MAIN_OBJECT_FILES) $(TEST_OBJECT_FILES)
-	@$(CC) $^ -o $@
+$(UNIT_TEST_EXECUTABLE): $(APPLICATION_OBJECT_FILES_WITHOUT_MAIN) $(UNIT_TEST_OBJECT_FILES)
+	@$(COMPILER) $^ -o $@ -lm
 
-# Pattern rule to compile each .c file into its .o object file
-# $< = source file, $@ = object file
 %.o: %.c
-	@$(CC) $(CFLAGS) -c $< -o $@
+	@$(COMPILER) $(COMPILER_FLAGS) -c $< -o $@
 
-# Run the main application
 run: $(APPLICATION_EXECUTABLE)
 	@./$(APPLICATION_EXECUTABLE)
 
-# Run the unit test executable
-test: $(TEST_EXECUTABLE)
-	@./$(TEST_EXECUTABLE)
+test: $(UNIT_TEST_EXECUTABLE)
+	@./$(UNIT_TEST_EXECUTABLE)
 
-# Deletes all .exe and .o files (recursive for objects)
 clean:
-	@echo Cleaning up object and executable files...
-	@del /q /f *.exe 2>nul
-	@for /r %%d in (.) do @del /q /f "%%d\*.o" 2>nul
+	@echo Cleaning up object files, executable files, and build directory...
+ifeq ($(OS),Windows_NT)
+	@del /q /f ImageToASCIILineArt runAllTests 2>nul || rem
+	@del /q /f *.exe 2>nul || rem
+	@for /r %%d in (.) do @del /q /f "%%d\\*.o" 2>nul || rem
+	@if exist build rmdir /s /q build
+else
+	@find . -type f -name "*.o" -delete
+	@find . -type f -name "*.exe" -delete
+	@rm -f ImageToASCIILineArt runAllTests
+	@rm -rf build
+endif

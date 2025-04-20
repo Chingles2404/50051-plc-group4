@@ -9,9 +9,24 @@ int main(int argc, char **argv) {
     int value;
     int rowIndex;
     int columnIndex;
+
     Matrix *paddedMatrix;
     Matrix *removedPaddingMatrix;
+
+    Matrix *surrounding1;
+    Matrix *surrounding2;
+
+    Matrix *xKernel;
+    Matrix *yKernel;
     
+    Matrix * gx;
+    Matrix * gy;
+
+    int dot;
+
+    Matrix * gradient;
+    Matrix * gradientPipelineResult;
+
     originalMatrix = createMatrix(3, 3);
 
     value = 1;
@@ -46,9 +61,9 @@ int main(int argc, char **argv) {
         printf("Matrices are not equal\n");
     }
 
-    Matrix * surrounding1 = getSurroundingElements(paddedMatrix, 1, 1, 3);
-    Matrix * surrounding2 = getSurroundingElements(paddedMatrix, 3, 3, 3);
-    int dot = matrixDotProduct(surrounding1, surrounding2, 3);
+    surrounding1 = getSurroundingElements(paddedMatrix, 1, 1, 3);
+    surrounding2 = getSurroundingElements(paddedMatrix, 3, 3, 3);
+    dot = matrixDotProduct(surrounding1, surrounding2, 3);
     printf("Surrounding1:\n");
     for (rowIndex = 0; rowIndex < surrounding1->numberRows; rowIndex++) {
         for (columnIndex = 0; columnIndex < surrounding1->numberCols; columnIndex++) {
@@ -65,7 +80,7 @@ int main(int argc, char **argv) {
     }
     printf("Dot product: %d\n", dot);
 
-    Matrix * xKernel = createMatrix(3, 3);
+    xKernel = createMatrix(3, 3);
     setMatrixElement(xKernel, 0, 0, -1);
     setMatrixElement(xKernel, 0, 1, 0);
     setMatrixElement(xKernel, 0, 2, 1);
@@ -75,7 +90,7 @@ int main(int argc, char **argv) {
     setMatrixElement(xKernel, 2, 0, -1);
     setMatrixElement(xKernel, 2, 1, 0);
     setMatrixElement(xKernel, 2, 2, 1);
-    Matrix * yKernel = createMatrix(3, 3);
+    yKernel = createMatrix(3, 3);
     setMatrixElement(yKernel, 0, 0, -1);
     setMatrixElement(yKernel, 0, 1, -2);
     setMatrixElement(yKernel, 0, 2, -1);
@@ -86,8 +101,8 @@ int main(int argc, char **argv) {
     setMatrixElement(yKernel, 2, 1, 2);
     setMatrixElement(yKernel, 2, 2, 1);
 
-    Matrix * gx = applyKernel(originalMatrix, xKernel);
-    Matrix * gy = applyKernel(originalMatrix, yKernel);
+    gx = applyKernel(originalMatrix, xKernel);
+    gy = applyKernel(originalMatrix, yKernel);
     printf("Gx:\n");
     for (rowIndex = 0; rowIndex < gx->numberRows; rowIndex++) {
         for (columnIndex = 0; columnIndex < gx->numberCols; columnIndex++) {
@@ -103,7 +118,7 @@ int main(int argc, char **argv) {
         printf("\n");
     }
 
-    Matrix * gradient = getGradientOfPixel(originalMatrix, xKernel, yKernel);
+    gradient = getGradientOfPixel(originalMatrix, xKernel, yKernel);
     printf("Gradient:\n");
     for (rowIndex = 0; rowIndex < gradient->numberRows; rowIndex++) {
         for (columnIndex = 0; columnIndex < gradient->numberCols; columnIndex++) {
@@ -112,7 +127,7 @@ int main(int argc, char **argv) {
         printf("\n");
     }
 
-    Matrix * gradientPipelineResult = gradientPipeline(originalMatrix);
+    gradientPipelineResult = gradientPipeline(originalMatrix);
     printf("Gradient Pipeline Result:\n");
     for (rowIndex = 0; rowIndex < gradientPipelineResult->numberRows; rowIndex++) {
         for (columnIndex = 0; columnIndex < gradientPipelineResult->numberCols; columnIndex++) {

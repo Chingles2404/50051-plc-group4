@@ -4,8 +4,8 @@
 typedef struct {
     const char* label;
     const int values[9];
-    char expected_character; // Only used if `is_expected` is 1
-    int is_expected; // 1 if this character is expected to match. else 0
+    char expected_character; /* Only used if `is_expected` is 1 */
+    int is_expected; /* 1 if this character is expected to match. else 0 */
 } TestCase;
 
 void test_ascii_needs_normalisation_check();

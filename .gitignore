@@ -5,3 +5,5 @@
 # Executables and output
 **.o
 **.exe
+ImageToASCIILineArt
+runAllTests

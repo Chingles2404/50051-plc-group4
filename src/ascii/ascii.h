@@ -7,12 +7,9 @@
 #define ASCII_MAIN_H
 #define DEFAULT_TEMPLATE_SIZE 3
 
-// Use the "Matrix" structure instead as we have in edge_detection utils.
-// typedef int Matrix[SIZE][SIZE];
-
 typedef struct {
     char character;
-    const int* ascii_template; // This is a flat array
+    const int* ascii_template; /* This is a flat array */
     int rows;
     int cols;
 } AsciiTemplate;

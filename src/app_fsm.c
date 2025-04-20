@@ -4,18 +4,11 @@
 #include <stdlib.h>
 #include <string.h>
 #include "matrices.h"
+#include "string_helpers.h"
 
 /* Transition table */
 static Transition transitions[] = {
     
-    // /* Transition Structure */
-    // typedef struct {
-    //     AppState current; /* Current state */
-    //     ActionType action; /* Action to perform */
-    //     void* actionParam; /* Parameters for the action (if any) */
-    //     AppState success; /* Next state if action succeeds */
-    //     AppState failure; /* Next state if action fails */
-    // } Transition;
 
     /* Main Menu transitions */
     {STATE_INPUT_MainMenu, ACTION_INPUT, NULL, STATE_GOTO_LoadImage, STATE_INPUT_MainMenu},
@@ -56,7 +49,9 @@ static Transition transitions[] = {
 static const int numTransitions = sizeof(transitions) / sizeof(Transition);
 
 void initialiseFSM() {
-    for (int i = 0; i < numTransitions; i++) {
+    int i;
+
+    for (i = 0; i < numTransitions; i++) {
         switch (transitions[i].current) {
             case STATE_INPUT_MainMenu:
                 transitions[i].actionParam = malloc(sizeof(int));
@@ -94,7 +89,8 @@ void initialiseFSM() {
 }
 
 void cleanupFSM() {
-    for (int i = 0; i < numTransitions; i++) {
+    int i;
+    for (i = 0; i < numTransitions; i++) {
         if (transitions[i].actionParam != NULL) {
             free(transitions[i].actionParam);
         }
@@ -103,7 +99,8 @@ void cleanupFSM() {
 
 /* find transition for curr state */
 Transition* findTransition(AppState state) {
-    for (int i = 0; i < numTransitions; i++) {
+    int i;
+    for (i = 0; i < numTransitions; i++) {
         if (transitions[i].current == state) {
             return &transitions[i];
         }
@@ -113,16 +110,18 @@ Transition* findTransition(AppState state) {
 }
 
 /* execute action for a transition */
-ActionStatus executeAction(ActionType actionType, void* param, AppContext* ctx) {
+ActionStatus executeAction(ActionType actionType, void* param, AppContext* context) {
+    ActionFunction actionFunc;
+
     /* Special case for GOTO action - always succeeds */
     if (actionType == ACTION_GOTO) {
         return ACTION_SUCCESS;
     }
     
     /* get correct action function based on state and action type */
-    ActionFunction actionFunc = NULL;
+    actionFunc = NULL;
     
-    switch (ctx->state) {
+    switch (context->state) {
         /* Input states */
         case STATE_INPUT_MainMenu:
             actionFunc = actionMainMenu;
@@ -200,9 +199,9 @@ ActionStatus executeAction(ActionType actionType, void* param, AppContext* ctx) 
         /* Output states */
         case STATE_OUTPUT_File:
             actionFunc = actionOutputFileName;
-            if (actionFunc(ctx, param) == ACTION_SUCCESS) {
+            if (actionFunc(context, param) == ACTION_SUCCESS) {
                 /* if filename input succeeded, save to that file */
-                return actionSaveToFile(ctx, param);
+                return actionSaveToFile(context, param);
             } else {
                 return ACTION_FAILURE;
             }
@@ -215,43 +214,47 @@ ActionStatus executeAction(ActionType actionType, void* param, AppContext* ctx) 
             
         /* Error state */
         case STATE_ERROR_Generic:
-            printf("Error: %s\n", ctx->errorMessage ? ctx->errorMessage : "Unknown error");
+            printf("Error: %s\n", context->errorMessage ? context->errorMessage : "Unknown error");
             printf("Press Enter to return to main menu...");
             clearInputBuffer();
             getchar(); /* wait for user to Enter */
             return ACTION_SUCCESS;
             
         default:
-            printf("Error: Unknown state %d\n", ctx->state);
+            printf("Error: Unknown state %d\n", context->state);
             return ACTION_FAILURE;
     }
     
     if (actionFunc != NULL) {
-        return actionFunc(ctx, param);
+        return actionFunc(context, param);
     } else {
-        printf("Error: No action function for state %d\n", ctx->state);
+        printf("Error: No action function for state %d\n", context->state);
         return ACTION_FAILURE;
     }
 }
 
-AppState processState(AppContext* ctx) {
+AppState processState(AppContext* context) {
+    Transition* transition;
+    ActionStatus status;
     /*exit state */
-    if (ctx->state == STATE_EXIT) {
+    if (context->state == STATE_EXIT) {
         return STATE_EXIT;
     }
     
-    Transition* transition = findTransition(ctx->state);
+    transition = findTransition(context->state);
     if (transition == NULL) {
-        printf("Error: No transition found for state %d\n", ctx->state);
-        if (ctx->errorMessage) free(ctx->errorMessage);
-        ctx->errorMessage = strdup("No transition found for current state");
+        printf("Error: No transition found for state %d\n", context->state);
+        if (context->errorMessage) free(context->errorMessage);
+        context->errorMessage = stringDuplicate("No transition found for current state");
+        
         return STATE_ERROR_Generic;
     }
     
     /* main menu */
-    if (ctx->state == STATE_INPUT_MainMenu) {
-        ActionStatus status = executeAction(transition->action, transition->actionParam, ctx);
-        int choice = *(int*)transition->actionParam;
+    if (context->state == STATE_INPUT_MainMenu) {
+        int choice;
+        status = executeAction(transition->action, transition->actionParam, context);
+        choice = *(int*)transition->actionParam;
         
         if (status == ACTION_SUCCESS) {
             if (choice == 1) {
@@ -269,9 +272,10 @@ AppState processState(AppContext* ctx) {
     }
     
     /* file path input - handle 'back' command */
-    if (ctx->state == STATE_INPUT_FilePath) {
-        ActionStatus status = executeAction(transition->action, transition->actionParam, ctx);
-        int choice = *(int*)transition->actionParam;
+    if (context->state == STATE_INPUT_FilePath) {
+        int choice;
+        status = executeAction(transition->action, transition->actionParam, context);
+        choice = *(int*)transition->actionParam;
         
         if (status == ACTION_SUCCESS && choice == -1) {
             /* user entered 'back' command */
@@ -283,16 +287,20 @@ AppState processState(AppContext* ctx) {
         }
     }
     /* file path input - handle 'back' command */
-    if (ctx->state == STATE_INPUT_Config) {
-        ActionStatus status = executeAction(transition->action, transition->actionParam, ctx);
-        int choice = *(int*)transition->actionParam;
+    if (context->state == STATE_INPUT_Config) {
+        int choice;
+        status = executeAction(transition->action, transition->actionParam, context);
+        choice = *(int*)transition->actionParam;
         
         if (status == ACTION_SUCCESS) {
 
-            // printf("1. Set Resolution (current: %dx%d)\n", ctx->chunkSize, ctx->chunkSize);
-            // printf("2. Set Color Mode (current: %s)\n", 
-            //        ctx->colorMode == 0 ? "Grayscale" : "Color");
-            // printf("3. Return to Main Menu\n");
+            /**
+            printf("1. Set Resolution (current: %dx%d)\n", ctx->chunkSize, ctx->chunkSize);
+            printf("2. Set Color Mode (current: %s)\n", 
+                ctx->colorMode == 0 ? "Grayscale" : "Color");
+            printf("3. Return to Main Menu\n");
+             */
+            
             switch (choice) {
                 case 1:
                     return STATE_VALIDATE_Config;
@@ -309,9 +317,10 @@ AppState processState(AppContext* ctx) {
     }
 
     /* validate adjust */
-    if (ctx->state == STATE_VALIDATE_Adjust) {
-        ActionStatus status = executeAction(transition->action, transition->actionParam, ctx);
-        int choice = *(int*)transition->actionParam;
+    if (context->state == STATE_VALIDATE_Adjust) {
+        int choice;
+        status = executeAction(transition->action, transition->actionParam, context);
+        choice = *(int*)transition->actionParam;
         
         if (status == ACTION_SUCCESS) {
 
@@ -332,9 +341,10 @@ AppState processState(AppContext* ctx) {
     }
     
     /* final preview */
-    if (ctx->state == STATE_GOTO_FinalPreview) {
-        ActionStatus status = executeAction(transition->action, transition->actionParam, ctx);
-        int choice = *(int*)transition->actionParam;
+    if (context->state == STATE_GOTO_FinalPreview) {
+        int choice;
+        status = executeAction(transition->action, transition->actionParam, context);
+        choice = *(int*)transition->actionParam;
         
         if (status == ACTION_SUCCESS) {
             
@@ -346,8 +356,8 @@ AppState processState(AppContext* ctx) {
                 case 3: {
                     /* first save, then display */
                     AppState nextState = STATE_OUTPUT_File;
-                    ctx->state = nextState;
-                    nextState = processState(ctx);
+                    context->state = nextState;
+                    nextState = processState(context);
                     if (nextState == STATE_ERROR_Generic) {
                         return nextState;
                     }
@@ -360,55 +370,57 @@ AppState processState(AppContext* ctx) {
             return STATE_GOTO_FinalPreview;
         }
     }
-    ActionStatus status = executeAction(transition->action, transition->actionParam, ctx);
+    status = executeAction(transition->action, transition->actionParam, context);
     if (status == ACTION_SUCCESS) {
         return transition->success;
     } else {
-        if (ctx->errorMessage) {
-            printf("Error: %s\n", ctx->errorMessage);
+        if (context->errorMessage) {
+            printf("Error: %s\n", context->errorMessage);
         }
         return transition->failure;
     }
 }
 
 AppContext* createAppContext() {
-    AppContext* ctx = (AppContext*)malloc(sizeof(AppContext));
-    if (ctx == NULL) return NULL;
+    AppContext* context;
+    context = (AppContext*)malloc(sizeof(AppContext));
+    if (context == NULL) return NULL;
     
-    ctx->state = STATE_INPUT_MainMenu;
-    ctx->filename = NULL;
-    ctx->parser = NULL;
-    ctx->image = NULL;
-    ctx->edges = NULL;
-    ctx->chunks = NULL;
-    ctx->asciiArt = NULL;
-    ctx->chunkSize = 3;      /* Default 3x3 resolution */
-    ctx->colorMode = 0;      /* Default grayscale */
-    ctx->totalChunks = 0;
-    ctx->chunkRows = 0;
-    ctx->chunkCols = 0;
-    ctx->errorMessage = NULL;
+    context->state = STATE_INPUT_MainMenu;
+    context->filename = NULL;
+    context->parser = NULL;
+    context->image = NULL;
+    context->edges = NULL;
+    context->chunks = NULL;
+    context->asciiArt = NULL;
+    context->chunkSize = 3;      /* Default 3x3 resolution */
+    context->colorMode = 0;      /* Default grayscale */
+    context->totalChunks = 0;
+    context->chunkRows = 0;
+    context->chunkCols = 0;
+    context->errorMessage = NULL;
     
-    return ctx;
+    return context;
 }
 
-void freeAppContext(AppContext* ctx) {
-    if (ctx == NULL) return;
+void freeAppContext(AppContext* context) {
+    int i;
+    if (context == NULL) return;
     
-    if (ctx->filename) free(ctx->filename);
-    if (ctx->parser) freeBitmapParser(ctx->parser);
-    if (ctx->image) freeMatrix(ctx->image);
-    if (ctx->edges) freeMatrix(ctx->edges);
+    if (context->filename) free(context->filename);
+    if (context->parser) freeBitmapParser(context->parser);
+    if (context->image) freeMatrix(context->image);
+    if (context->edges) freeMatrix(context->edges);
     
-    if (ctx->chunks) {
-        for (int i = 0; i < ctx->totalChunks; i++) {
-            if (ctx->chunks[i]) freeMatrix(ctx->chunks[i]);
+    if (context->chunks) {
+        for (i = 0; i < context->totalChunks; i++) {
+            if (context->chunks[i]) freeMatrix(context->chunks[i]);
         }
-        free(ctx->chunks);
+        free(context->chunks);
     }
     
-    if (ctx->asciiArt) free(ctx->asciiArt);
-    if (ctx->errorMessage) free(ctx->errorMessage);
+    if (context->asciiArt) free(context->asciiArt);
+    if (context->errorMessage) free(context->errorMessage);
     
-    free(ctx);
+    free(context);
 }

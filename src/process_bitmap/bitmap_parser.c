@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "bitmap_parser.h"
+#include "string_helpers.h"
 
 BitmapParser* createBitmapParser() {
     BitmapParser* parser = (BitmapParser*)malloc(sizeof(BitmapParser));
@@ -52,7 +53,7 @@ void setError(BitmapParser* parser, ErrorCode code, const char* message) {
         free(parser->error_message);
     }
     
-    parser->error_message = strdup(message);
+    parser->error_message = stringDuplicate(message);
 }
 
 /* parse file (STARTS HERE) */
@@ -72,7 +73,7 @@ bool parseFile(BitmapParser* parser, const char* filename) {
     return parser->state == STATE_COMPLETED;
 }
 
-ParserState processReadingState(BitmapParser* parser) { // This may be replaced with processState in the future
+ParserState processReadingState(BitmapParser* parser) { /* This may be replaced with processState in the future */
     switch (parser->state) {
         case STATE_INIT:
             return STATE_ERROR; /* Should never happen - initialization requires filename */
@@ -104,7 +105,7 @@ ParserState handleInitState(BitmapParser* parser, const char* filename) {
     parser->file = fopen(filename, "rb");
     if (parser->file == NULL) {
         char error_msg[256];
-        snprintf(error_msg, sizeof(error_msg), "Failed to open file: %s", filename);
+        sprintf(error_msg, "Failed to open file: %s", filename);
         setError(parser, ERROR_FILE_NOT_FOUND, error_msg);
         return STATE_ERROR;
     }
@@ -115,11 +116,13 @@ ParserState handleInitState(BitmapParser* parser, const char* filename) {
 
 
 ParserState handleFileHeaderState(BitmapParser* parser) {
+    size_t read;
+
     fseek(parser->file, 0, SEEK_SET);
     parser->current_position = 0;
     
     /* reading file header */
-    size_t read = fread(&parser->fileHeader, sizeof(FILEHEADER), 1, parser->file);
+    read = fread(&parser->fileHeader, sizeof(FILEHEADER), 1, parser->file);
     if (read != 1) {
         setError(parser, ERROR_READING_FILE, "Failed to read BMP file header");
         return STATE_ERROR;
@@ -137,7 +140,9 @@ ParserState handleFileHeaderState(BitmapParser* parser) {
 }
 
 ParserState handleInfoHeaderState(BitmapParser* parser) {
-    size_t read = fread(&parser->infoHeader, sizeof(INFOHEADER), 1, parser->file);
+    size_t read;
+    
+    read = fread(&parser->infoHeader, sizeof(INFOHEADER), 1, parser->file);
     if (read != 1) {
         setError(parser, ERROR_READING_FILE, "Failed to read BMP info header");
         return STATE_ERROR;
@@ -148,9 +153,8 @@ ParserState handleInfoHeaderState(BitmapParser* parser) {
     /* validate BMP format */
     if (parser->infoHeader.bits != 24 && parser->infoHeader.bits != 32) {
         char error_msg[256];
-        snprintf(error_msg, sizeof(error_msg), 
-                "Unsupported BMP format: %d bits per pixel (only 24 and 32 supported)", 
-                parser->infoHeader.bits);
+        
+        sprintf(error_msg, "Unsupported BMP format: %d bits per pixel (only 24 and 32 supported)", parser->infoHeader.bits);
         setError(parser, ERROR_UNSUPPORTED_FORMAT, error_msg);
         return STATE_ERROR;
     }
@@ -165,12 +169,26 @@ ParserState handleInfoHeaderState(BitmapParser* parser) {
 }
 
 ParserState handlePixelDataState(BitmapParser* parser) {
-    int width = parser->infoHeader.width;
-    int height = parser->infoHeader.height;
-    int bytesPerPixel = parser->infoHeader.bits / 8;
+    int width;
+    int height;
+    int bytesPerPixel;
+
+    unsigned char* row;
+    int row_padded;
+    size_t read;
+
+    int i;
+    int j;
+
+    int gray;
     
+
+    width = parser->infoHeader.width;
+    height = parser->infoHeader.height;
+    bytesPerPixel = parser->infoHeader.bits / 8;
+
     /* Calculate row padding - rows are padded to multiple of 4 bytes */
-    int row_padded = (width * bytesPerPixel + 3) & (~3);
+    row_padded = (width * bytesPerPixel + 3) & (~3);
     
     /* Allocate memory for pixel data (grayscale) */
     parser->pixelData = (unsigned char*)malloc(width * height);
@@ -180,7 +198,7 @@ ParserState handlePixelDataState(BitmapParser* parser) {
     }
     
     /* allocate memory for a single row (including padding) */
-    unsigned char* row = (unsigned char*)malloc(row_padded);
+    row = (unsigned char*)malloc(row_padded);
     if (row == NULL) {
         free(parser->pixelData);
         parser->pixelData = NULL;
@@ -191,8 +209,8 @@ ParserState handlePixelDataState(BitmapParser* parser) {
     fseek(parser->file, parser->fileHeader.offset, SEEK_SET);
     parser->current_position = parser->fileHeader.offset;
     
-    for (int i = 0; i < height; i++) {
-        size_t read = fread(row, 1, row_padded, parser->file);
+    for (i = 0; i < height; i++) {
+        read = fread(row, 1, row_padded, parser->file);
         if (read != row_padded) {
             free(row);
             free(parser->pixelData);
@@ -203,9 +221,9 @@ ParserState handlePixelDataState(BitmapParser* parser) {
         
         parser->current_position += row_padded;
         
-        for (int j = 0; j < width * bytesPerPixel; j += bytesPerPixel) {
+        for (j = 0; j < width * bytesPerPixel; j += bytesPerPixel) {
             /* Convert RGB to grayscale using luminance formula */
-            int gray = (row[j] * 0.11) + (row[j + 1] * 0.59) + (row[j + 2] * 0.3);
+            gray = (row[j] * 0.11) + (row[j + 1] * 0.59) + (row[j + 2] * 0.3);
             
             /* store grayscale value */
             /* invert rows */

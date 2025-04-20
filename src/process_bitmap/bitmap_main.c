@@ -3,14 +3,17 @@
 #include "bitmap_parser.h"
 
 int main(int argc, char **argv) {
+    
+    const char *filename = argv[1];
+    BitmapParser* parser;
+
     if (argc < 2) {
         printf("Usage: %s <bitmap_file>\n", argv[0]);
         return EXIT_FAILURE;
     }
 
-    const char *filename = argv[1];
-    
-    BitmapParser* parser = createBitmapParser();
+
+    parser = createBitmapParser();
     if (parser == NULL) {
         fprintf(stderr, "Failed to create bitmap parser\n");
         return EXIT_FAILURE;
@@ -31,11 +34,19 @@ int main(int argc, char **argv) {
     printf("File size: %u bytes\n", parser->fileHeader.size);
     
     if (parser->pixelData != NULL) {
-        int width = parser->infoHeader.width;
-        int height = parser->infoHeader.height;
+        int width;
+        int height;
+        int i;
+        FILE* outFile;
+        int y;
+        int x;
+        int idx;
+
+        width = parser->infoHeader.width;
+        height = parser->infoHeader.height;
         
         printf("First 10 pixels (grayscale values): ");
-        for (int i = 0; i < 10 && i < width * height; i++) {
+        for (i = 0; i < 10 && i < width * height; i++) {
             printf("%d ", parser->pixelData[i]);
         }
         printf("\n");
@@ -44,15 +55,16 @@ int main(int argc, char **argv) {
         /* and implement the edge detection and ASCII mapping */
         
         /* this i just did to test */
-        FILE* outFile = fopen("output.txt", "w");
+        outFile = fopen("output.txt", "w");
         if (outFile != NULL) {
-            for (int y = 0; y < height; y += 2) {  /* Skip rows to maintain aspect ratio */
-                for (int x = 0; x < width; x++) {
-                    int idx = y * width + x;
+            for (y = 0; y < height; y += 2) {  /* Skip rows to maintain aspect ratio */
+                for (x = 0; x < width; x++) {
+                    idx = y * width + x;
                     if (idx < width * height) {
                         /* simple mapping grayscale values to simple ASCII chars */
                         char symbol;
-                        int gray = parser->pixelData[idx];
+                        int gray;
+                        gray = parser->pixelData[idx];
                         
                         if (gray < 50) symbol = '#';         /* Very dark */
                         else if (gray < 100) symbol = '@';   /* Dark */

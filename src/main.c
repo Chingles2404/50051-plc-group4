@@ -7,13 +7,15 @@
 #include "edge_detection.h"
 #include "ascii.h"
 #include "matrices.h"
+#include "string_helpers.h"
 
 int main(int argc, char **argv) {
+    AppContext* context;
     initialiseFSM();
     
     /* Create application context */
-    AppContext* ctx = createAppContext();
-    if (ctx == NULL) {
+    context = createAppContext();
+    if (context == NULL) {
         fprintf(stderr, "Failed to create application context\n");
         cleanupFSM();
         return EXIT_FAILURE;
@@ -21,20 +23,20 @@ int main(int argc, char **argv) {
     
     /* If command line argument provided, use it as filename */
     if (argc > 1) {
-        ctx->filename = strdup(argv[1]);
-        ctx->state = STATE_VALIDATE_Path;
+        context->filename = stringDuplicate(argv[1]);
+        context->state = STATE_VALIDATE_Path;
     } else {
-        ctx->state = STATE_INPUT_MainMenu;
+        context->state = STATE_INPUT_MainMenu;
     }
     
     /* Main FSM loop */
-    while (ctx->state != STATE_EXIT) {
-        ctx->state = processState(ctx);
+    while (context->state != STATE_EXIT) {
+        context->state = processState(context);
     }
     
     printf("Exiting ASCII Art Generator. Goodbye!\n");
     
-    freeAppContext(ctx);
+    freeAppContext(context);
     cleanupFSM();
     
     return EXIT_SUCCESS;

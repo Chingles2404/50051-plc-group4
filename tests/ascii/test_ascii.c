@@ -10,7 +10,7 @@ void test_ascii_needs_normalisation_check() {
 
     Matrix *m;
 
-    // Requires normalisation (grayscale values > 128)
+    /* Requires normalisation (grayscale values > 128) */
         
     m = createMatrix(3, 3);
     setMatrixElement(m, 0, 0, 255);
@@ -34,7 +34,7 @@ void test_ascii_does_not_need_normalisation_check() {
 
     Matrix *m;
 
-    // Already in binary 0 and 1
+    /* Already in binary 0 and 1 */
     m = createMatrix(3, 3);
     setMatrixElement(m, 0, 0, 0);
     setMatrixElement(m, 0, 1, 1);
@@ -54,10 +54,13 @@ void test_ascii_does_not_need_normalisation_check() {
 }
 
 void test_normalise_edge_matrix() {
-    Matrix *input = createMatrix(3, 3);
-    Matrix *binary = createMatrix(3, 3);
 
-    // Input has values above and below 128
+    Matrix *input;
+    Matrix *binary;
+    input = createMatrix(3, 3);
+    binary = createMatrix(3, 3);
+
+    /* Input has values above and below 128 */
     setMatrixElement(input, 0, 0, 255);
     setMatrixElement(input, 0, 1, 127);
     setMatrixElement(input, 0, 2, 129);
@@ -70,7 +73,7 @@ void test_normalise_edge_matrix() {
 
     normalise_edge_matrix(input, binary);
 
-    // Check values were correctly thresholded at 128
+    /* Check values were correctly thresholded at 128 */
     assert(getMatrixElement(binary, 0, 0) == 1);
     assert(getMatrixElement(binary, 0, 1) == 0);
     assert(getMatrixElement(binary, 0, 2) == 1);
@@ -88,21 +91,33 @@ void test_normalise_edge_matrix() {
 }
 
 void test_compute_mse() {
-    Matrix *A = createMatrix(3, 3);
-    Matrix *B = createMatrix(3, 3);
+    Matrix *A;
+    Matrix *B;
 
-    for (int i = 0; i < 3; i++) {
-        for (int j = 0; j < 3; j++) {
+    int i;
+    int j;
+
+    char test_character;
+    double weight;
+    double expected_mse;
+    double mse;
+
+
+    A = createMatrix(3, 3);
+    B = createMatrix(3, 3);
+
+    for (i = 0; i < 3; i++) {
+        for (j = 0; j < 3; j++) {
             setMatrixElement(A, i, j, 1);
             setMatrixElement(B, i, j, 0);
         }
     }
 
-    char test_character = '#';
-    double weight = get_weight(test_character);
-    double expected_mse = (1.0 * 1.0 * weight * 9) / 9.0;  // 9 elements, diff^2 = 1
+    test_character = '#';
+    weight = get_weight(test_character);
+    expected_mse = (1.0 * 1.0 * weight * 9) / 9.0;  /* 9 elements, diff^2 = 1 */
 
-    double mse = compute_mse(A, B, test_character);
+    mse = compute_mse(A, B, test_character);
 
     assert(mse == expected_mse);
     printf("test_compute_mse passed\n");
@@ -113,8 +128,7 @@ void test_compute_mse() {
 
 
 void test_ascii_template_single() {
-    Matrix* m = createMatrix(3, 3);
-    assert(m != NULL);
+    Matrix* m;
 
     int values[3][3] = {
         {1, 1, 1},
@@ -122,11 +136,19 @@ void test_ascii_template_single() {
         {1, 1, 1}
     };
 
-    for (int i = 0; i < 3; ++i)
-        for (int j = 0; j < 3; ++j)
+    int i;
+    int j;
+    char bestChar;
+    
+    m = createMatrix(3, 3);
+    assert(m != NULL);
+
+
+    for (i = 0; i < 3; ++i)
+        for (j = 0; j < 3; ++j)
             setMatrixElement(m, i, j, values[i][j]);
 
-    char bestChar = find_best_ascii(m);
+    bestChar = find_best_ascii(m);
     assert(bestChar == '@'); 
 
     freeMatrix(m);
@@ -136,15 +158,19 @@ void test_ascii_template_single() {
 
 
 
-// Helper function to consecutively test multiple ascii_templates in one go
+/* Helper function to consecutively test multiple ascii_templates in one go */
 void run_test_cases(const char *label, const int values[9], char expected_character, int is_expected_to_match_character) {
-    Matrix* m = createMatrixFromFlatArray(3, 3, values);
-    Matrix* binary_matrix = createMatrix(3, 3);
+
+    Matrix* m;
+    Matrix* binary_matrix;
+    char result;
+
+    m = createMatrixFromFlatArray(3, 3, values);
+    binary_matrix = createMatrix(3, 3);
 
     printf("%s\n", label);
     print_matrix(m);
 
-    char result;
 
     if (needs_normalisation(m)) {
         normalise_edge_matrix(m, binary_matrix);
@@ -204,7 +230,7 @@ const TestCase test_cases[] = {
     {"Match this character: 'F'", {1,1,1, 1,1,1, 1,0,0}, 'F', 1},
     {"Match this character: 'F'", {1,1,1, 1,1,1, 1,0,0}, 'F', 1},
     
-    // Dot variants
+    /* Dot variants */
     {"Match this character: '`' (TC)", {0,1,0, 0,0,0, 0,0,0}, '`', 1},
     {"Match this character: '`' (TR)", {0,0,1, 0,0,0, 0,0,0}, '`', 1},
     {"Match this character: '`' (TL)", {1,0,0, 0,0,0, 0,0,0}, '`', 1},
@@ -215,7 +241,7 @@ const TestCase test_cases[] = {
     {"Match this character: '.' (BC)", {0,0,0, 0,0,0, 0,1,0}, '.', 1},
     {"Match this character: '.' (BR)", {0,0,0, 0,0,0, 0,0,1}, '.', 1},
 
-    // Colon variants
+    /* Colon variants */
     {"Match this character: ':' (T-L)", {1,0,0, 1,0,0, 0,0,0}, ':', 1},
     {"Match this character: ':' (B-L)", {0,0,0, 1,0,0, 1,0,0}, ':', 1},
     {"Match this character: ':' (T-C)", {0,1,0, 0,1,0, 0,0,0}, ':', 1},
@@ -223,7 +249,7 @@ const TestCase test_cases[] = {
     {"Match this character: ':' (T-R)", {0,0,1, 0,0,1, 0,0,0}, ':', 1},
     {"Match this character: ':' (B-R)", {0,0,0, 0,0,1, 0,0,1}, ':', 1},
 
-    // Uncertain
+    /* Uncertain */
     {"Uncertain: L-corner",                {1,1,1,1,0,0,0,0,0}, '?', 0},
     {"Uncertain: Bottom-left block",       {0,0,0,0,0,0,1,1,0}, '?', 0},
     {"Uncertain: Top-right box",           {0,1,1,0,1,1,0,0,0}, '?', 0},
@@ -235,7 +261,10 @@ const TestCase test_cases[] = {
 
 void test_ascii_template_multiple() {
     const int total = sizeof(test_cases) / sizeof(test_cases[0]);
-    for (int i = 0; i < total; ++i) {
+
+    int i;
+
+    for (i = 0; i < total; ++i) {
         run_test_cases(
             test_cases[i].label,
             test_cases[i].values,
