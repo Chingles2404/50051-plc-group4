@@ -16,7 +16,7 @@ ActionStatus actionMainMenu(AppContext* ctx, void* param) {
     int choice;
     printf("\n==== ASCII Art Generator ====\n");
     printf("1. Load Image\n");
-    printf("2. Configure Settings\n");
+    printf("2. Change Resolution\n");
     printf("3. Exit\n");
     printf("Enter your choice: ");
     
@@ -72,11 +72,11 @@ ActionStatus actionFilePath(AppContext* ctx, void* param) {
 
 ActionStatus actionConfigMenu(AppContext* ctx, void* param) {
     int choice;
+    int* choiceParam = (int*)param;
+    
     printf("\n==== Configuration Menu ====\n");
     printf("1. Set Resolution (current: %dx%d)\n", ctx->chunkSize, ctx->chunkSize);
-    printf("2. Set Color Mode (current: %s)\n", 
-           ctx->colorMode == 0 ? "Grayscale" : "Color");
-    printf("3. Return to Main Menu\n");
+    printf("2. Return to Main Menu\n");
     printf("Enter your choice: ");
     
     if (scanf("%d", &choice) != 1) {
@@ -86,9 +86,9 @@ ActionStatus actionConfigMenu(AppContext* ctx, void* param) {
     }
     clearInputBuffer();
     
-    *(int*)param = choice;
+    *choiceParam = choice;
     
-    if (choice >= 1 && choice <= 3) {
+    if (choice >= 1 && choice <= 2) {
         return ACTION_SUCCESS;
     } else {
         printf("Invalid choice. Please try again.\n");
@@ -118,30 +118,7 @@ ActionStatus actionResolutionConfig(AppContext* ctx, void* param) {
     return ACTION_SUCCESS;
 }
 
-ActionStatus actionColorModeConfig(AppContext* ctx, void* param) {
-    int choice;
-    printf("\nSet Color Mode\n");
-    printf("1. Grayscale\n");
-    printf("2. Color (ANSI Terminal Colors)\n");
-    printf("Enter your choice: ");
-    
-    if (scanf("%d", &choice) != 1) {
-        clearInputBuffer();
-        printf("Invalid input. Please enter a number.\n");
-        return ACTION_FAILURE;
-    }
-    clearInputBuffer();
-    
-    if (choice != 1 && choice != 2) {
-        printf("Invalid choice. Please try again.\n");
-        return ACTION_FAILURE;
-    }
-    
-    ctx->colorMode = choice - 1; /* 0 for Grayscale, 1 for Color */
-    printf("Color mode changed to %s\n", 
-           ctx->colorMode == 0 ? "Grayscale" : "Color");
-    return ACTION_SUCCESS;
-}
+
 
 ActionStatus actionPreviewChoice(AppContext* ctx, void* param) {
     int choice;
@@ -430,8 +407,6 @@ ActionStatus actionDisplayPreview(AppContext* ctx, void* param) {
 
 ActionStatus actionDisplayInTerminal(AppContext* ctx, void* param) {
 
-    size_t i;
-
     if (ctx->asciiArt == NULL) {
         if (ctx->errorMessage) free(ctx->errorMessage);
         ctx->errorMessage = stringDuplicate("No ASCII art available to display");
@@ -439,26 +414,7 @@ ActionStatus actionDisplayInTerminal(AppContext* ctx, void* param) {
     }
     
     printf("\n==== ASCII Art ====\n\n");
-    
-    /* If color mode is enabled, try to use ANSI colors */
-    if (ctx->colorMode == 1) {
-        /* this is a very simple implementation of color output because it is depenedent on the terminal ability so we might take this out*/
-        for (i = 0; i < strlen(ctx->asciiArt); i++) {
-            char c = ctx->asciiArt[i];
-            if (c == '\n') {
-                printf("\n");
-            } else if (c != ' ') {
-                /* Use different colors for different characters */
-                int color = (c % 6) + 31; /* ANSI colors 31-36 (red, green, yellow, blue, magenta, cyan) */
-                printf("\033[%dm%c\033[0m", color, c);
-            } else {
-                printf(" ");
-            }
-        }
-    } else {
-        /* just print the ASCII art as is */
-        printf("%s", ctx->asciiArt);
-    }
+    printf("%s", ctx->asciiArt);
     
     printf("\nPress Enter to continue...");
     clearInputBuffer();

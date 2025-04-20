@@ -36,9 +36,9 @@ int main(int argc, char **argv) {
     retryCount = 0;
 
     while (context->state != STATE_EXIT) {
-        printf("--- Main loop: current state is %d ---\n", context->state);
+        /* printf("--- Main loop: current state is %d ---\n", context->state); */
         newState = processState(context);
-        printf("--- Main loop: new state is %d ---\n", newState);
+        /* printf("--- Main loop: new state is %d ---\n", newState); */
 
         if (newState == context->state) {
             retryCount++;

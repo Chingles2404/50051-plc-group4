@@ -92,7 +92,7 @@ Transition* findTransition(AppState state) {
 ActionStatus executeAction(ActionType actionType, void* param, AppContext* context) {
     ActionFunction actionFunc;
 
-    printf("Executing action for state %d\n", context->state);
+    /* printf("Executing action for state %d\n", context->state); */
 
     if (actionType == ACTION_GOTO) return ACTION_SUCCESS;
 
@@ -100,10 +100,8 @@ ActionStatus executeAction(ActionType actionType, void* param, AppContext* conte
 
     if (context->state == STATE_VALIDATE_Config) {
         int choice = *(int*)param;
-        printf("Handling config validation for choice: %d\n", choice);
         if (choice == 1) return actionResolutionConfig(context, param);
-        else if (choice == 2) return actionColorModeConfig(context, param);
-        else if (choice == 3) return ACTION_SUCCESS;
+        else if (choice == 2) return ACTION_SUCCESS; 
         else return ACTION_FAILURE;
     }
 
@@ -138,7 +136,7 @@ ActionStatus executeAction(ActionType actionType, void* param, AppContext* conte
 
     if (actionFunc != NULL) {
         ActionStatus result = actionFunc(context, param);
-        printf("Action function for state %d result: %s\n", context->state, result == ACTION_SUCCESS ? "success" : "failure");
+        /* printf("Action function for state %d result: %s\n", context->state, result == ACTION_SUCCESS ? "success" : "failure"); */
         return result;
     }
     return ACTION_FAILURE;
@@ -185,9 +183,11 @@ AppState processState(AppContext* context) {
     }
 
     if (context->state == STATE_VALIDATE_Config) {
-        int choice = *(int*)transition->actionParam;
+        int* choiceParam = (int*)transition->actionParam;
+        int choice = *choiceParam;
+        
         if (status == ACTION_SUCCESS) {
-            if (choice == 3) {
+            if (choice == 2) {
                 /* If user came from adjustment, reprocess. Otherwise, return to main. */
                 return (context->resumeAfterConfig) ? STATE_TRANSFORM_Grayscale : STATE_INPUT_MainMenu;
             } else {
@@ -242,7 +242,6 @@ AppContext* createAppContext() {
     memset(context, 0, sizeof(AppContext));
     context->state = STATE_INPUT_MainMenu;
     context->chunkSize = 3;
-    context->colorMode = 0;
     context->resumeAfterConfig = 0;
     return context;
 }
