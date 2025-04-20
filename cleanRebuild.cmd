@@ -67,8 +67,8 @@ REM Run the compiled ASCII converter with an input BMP
 
 REM Run the program
 if exist %INPUT_BMP% (
-    echo Converting image to ASCII art...
-    echo ASCII art output will be located at "%OUTPUT_BMP%".
+    @REM echo Converting image to ASCII art...
+    @REM echo ASCII art output will be located at "%OUTPUT_TXT%".
 
 
     @REM %EXE_PATH% %INPUT_BMP%

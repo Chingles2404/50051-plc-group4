@@ -38,8 +38,8 @@ EXE_PATH="build/ImageToASCIILineArt"
 OUTPUT_TXT="build/ImageOutput.txt"
 
 if [ -f "$INPUT_BMP" ]; then
-    echo "Info: Converting image to ASCII art..."
-    echo "Info: Output will be saved to $OUTPUT_TXT"
+    # echo "Info: Converting image to ASCII art..."
+    # echo "Info: Output will be saved to $OUTPUT_TXT"
 
     "$EXE_PATH"
 else

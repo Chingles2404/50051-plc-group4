@@ -10,13 +10,12 @@ It supports:
 
 ---
 
-### Building the Project
+# Building the Project
 
 You may build this project in two ways: using **Makefile** (cross-platform) or **CMake**.
 
----
 
-### Building using Makefile (Cross-Platform)
+## Building using Makefile (Cross-Platform)
 
 In the root directory, run:
 
@@ -26,22 +25,17 @@ This will:
 - Compile all source files in `./src`
 - Compile test files in `./tests`
 - Output two binaries in the root directory:
-  
-  1. `ImageToASCIILineArt.exe`
-   
-  2. `runAllTests.exe`
 
+  1. ImageToASCIILineArt.exe (on Windows) or ImageToASCIILineArt (on Linux/macOS)
 
-`ImageToASCIILineArt.exe` runs the main program.
-
-`runAllTests.exe` runs the tests for our program.
-
+  2. runAllTests.exe (on Windows) or runAllTests (on Linux/macOS)
 
 To remove all .exe and .o files: `make clean`
 
 Note: you may have to run `make clean` before `make`.
 
-### Run the Executable with Makefile
+# Run the Executable with Makefile
+
 After a successful build, the output binary will be located at:
 
 `./ImageToASCIILineArt.exe`
@@ -54,12 +48,19 @@ To run the program on macOS/Linux (or WSL):
 
 `./ImageToASCIILineArt`
 
+# Cleaning
 
-### Building using CMake
+To remove all object (.o) files and executables:
+
+`make clean`
+
+You may need to run make clean before building to ensure a fresh start.
+
+# Building using CMake
 
 You can build this project with CMake on both Windows and Linux/macOS/WSL using the provided scripts:
 
-### On Windows (Command Prompt or Powershell)
+## On Windows (Command Prompt or Powershell)
 
 Use the batch script:
 
@@ -74,7 +75,7 @@ This will:
 
 We used `./sample_inputs/example.bmp` as the predefined image file.
 
-### On Linux/macOS/WSL
+## On Linux/macOS/WSL
 
 Use the provided shell script:
 
@@ -82,7 +83,7 @@ Use the provided shell script:
 
 This will perform the same actions as the batch script in Windows above.
 
-### Run the Executable with CMake Manually
+# Run the Executable with CMake Manually
 After a successful build, the output binary will be located at:
 
 `./build/ImageToASCIILineArt.exe`
