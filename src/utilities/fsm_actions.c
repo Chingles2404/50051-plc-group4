@@ -49,6 +49,7 @@ ActionStatus actionMainMenu(AppContext* ctx, void* param) {
 ActionStatus actionFilePath(AppContext* ctx, void* param) {
     char buffer[256];
     size_t bufferLength;
+    *(int*)param = 0;
 
     if (ctx->filename) {
         free(ctx->filename);
@@ -67,13 +68,18 @@ ActionStatus actionFilePath(AppContext* ctx, void* param) {
     if (bufferLength > 0 && buffer[bufferLength - 1] == '\n') {
         buffer[bufferLength - 1] = '\0';
     }
-    
-    /* check if user wants to go back */
+
     if (strcmp(buffer, "4") == 0) {
-        *(int*)param = -1; 
+        *(int*)param = -1;
         return ACTION_SUCCESS;
     }
-    
+
+    if (strlen(buffer) == 0) {
+        if (ctx->errorMessage) free(ctx->errorMessage);
+        ctx->errorMessage = stringDuplicate("Empty path entered.");
+        return ACTION_FAILURE;
+    }
+
     ctx->filename = stringDuplicate(buffer);
     if (ctx->filename == NULL) {
         if (ctx->errorMessage) free(ctx->errorMessage);
@@ -83,6 +89,7 @@ ActionStatus actionFilePath(AppContext* ctx, void* param) {
     
     return ACTION_SUCCESS;
 }
+
 
 ActionStatus actionConfigMenu(AppContext* ctx, void* param) {
     int choice;
