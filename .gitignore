@@ -3,6 +3,7 @@
 .vscode
 
 # Executables and output
+output.txt
 **.o
 **.exe
 ImageToASCIILineArt
