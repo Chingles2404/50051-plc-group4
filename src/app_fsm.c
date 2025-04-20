@@ -19,6 +19,7 @@ static Transition transitions[] = {
 
     /* Main Menu transitions */
     {STATE_INPUT_MainMenu, ACTION_INPUT, NULL, STATE_GOTO_LoadImage, STATE_INPUT_MainMenu},
+    {STATE_INPUT_MainMenu, ACTION_GOTO, NULL, STATE_INPUT_Config, STATE_INPUT_MainMenu},
     
     /* Load Image path */
     {STATE_GOTO_LoadImage, ACTION_GOTO, NULL, STATE_INPUT_FilePath, STATE_INPUT_MainMenu},
@@ -256,13 +257,14 @@ AppState processState(AppContext* ctx) {
             if (choice == 1) {
                 return STATE_GOTO_LoadImage;
             } else if (choice == 2) {
+
+                printf("Selected 2");
                 return STATE_GOTO_Config;
             } else if (choice == 3) {
                 return STATE_EXIT;
             } else {
                 return STATE_INPUT_MainMenu;
             }
-        } else {
         }
     }
     
@@ -281,7 +283,7 @@ AppState processState(AppContext* ctx) {
         }
     }
     /* file path input - handle 'back' command */
-    if (ctx->state == STATE_GOTO_Config) {
+    if (ctx->state == STATE_INPUT_Config) {
         ActionStatus status = executeAction(transition->action, transition->actionParam, ctx);
         int choice = *(int*)transition->actionParam;
         
@@ -293,7 +295,7 @@ AppState processState(AppContext* ctx) {
             // printf("3. Return to Main Menu\n");
             switch (choice) {
                 case 1:
-                    return STATE_DISPLAY_Adjust;
+                    return STATE_VALIDATE_Config;
                 case 2:
                     return STATE_DISPLAY_Adjust;
                 case 3:
@@ -315,7 +317,7 @@ AppState processState(AppContext* ctx) {
 
             switch (choice) {
                 case 1:
-                    return STATE_DISPLAY_Adjust;
+                    return STATE_GOTO_Config;
                 case 2:
                     return STATE_GOTO_FinalPreview;
                 case 3:
@@ -359,7 +361,14 @@ AppState processState(AppContext* ctx) {
         }
     }
     ActionStatus status = executeAction(transition->action, transition->actionParam, ctx);
-    return (status == ACTION_SUCCESS) ? transition->success : transition->failure;
+    if (status == ACTION_SUCCESS) {
+        return transition->success;
+    } else {
+        if (ctx->errorMessage) {
+            printf("Error: %s\n", ctx->errorMessage);
+        }
+        return transition->failure;
+    }
 }
 
 AppContext* createAppContext() {
