@@ -27,9 +27,24 @@ int main(int argc, char **argv) {
         ctx->state = STATE_INPUT_MainMenu;
     }
     
-    /* Main FSM loop */
+    int retryCount = 0;
+
     while (ctx->state != STATE_EXIT) {
-        ctx->state = processState(ctx);
+        printf("--- Main loop: current state is %d ---\n", ctx->state);
+        AppState newState = processState(ctx);
+        printf("--- Main loop: new state is %d ---\n", newState);
+
+        if (newState == ctx->state) {
+            retryCount++;
+            if (retryCount >= 3) {
+                printf("Warning: State did not change after 3 attempts. Exiting to avoid infinite loop.\n");
+                break;
+            }
+        } else {
+            retryCount = 0;
+        }
+
+        ctx->state = newState;
     }
     
     printf("Exiting ASCII Art Generator. Goodbye!\n");
