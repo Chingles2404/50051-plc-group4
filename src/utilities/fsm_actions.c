@@ -14,18 +14,26 @@
 
 ActionStatus actionMainMenu(AppContext* ctx, void* param) {
     int choice;
+    char buffer[256];
+    *(int*)param = -1;
+
     printf("\n==== ASCII Art Generator ====\n");
     printf("1. Load Image\n");
     printf("2. Change Resolution\n");
     printf("3. Exit\n");
     printf("Enter your choice: ");
     
-    if (scanf("%d", &choice) != 1) {
-        clearInputBuffer();
+    /* for input. buffer to read up to 255 characters + null terminator */ 
+
+    if (fgets(buffer, sizeof(buffer), stdin) == NULL) {
+        printf("Failed to read input.\n");
+        return ACTION_FAILURE;
+    }
+    
+    if (sscanf(buffer, "%d", &choice) != 1) {
         printf("Invalid input. Please enter a number.\n");
         return ACTION_FAILURE;
     }
-    clearInputBuffer();
     
     /* store the user's choice in the context */
     *(int*)param = choice;
@@ -40,19 +48,25 @@ ActionStatus actionMainMenu(AppContext* ctx, void* param) {
 
 ActionStatus actionFilePath(AppContext* ctx, void* param) {
     char buffer[256];
+    size_t bufferLength;
+
     if (ctx->filename) {
         free(ctx->filename);
         ctx->filename = NULL;
     }
     
     printf("Enter image file path (or type '4' to return to main menu): ");
-    if (scanf("%255s", buffer) != 1) {
-        clearInputBuffer();
+
+    if (fgets(buffer, sizeof(buffer), stdin) == NULL) {
         if (ctx->errorMessage) free(ctx->errorMessage);
         ctx->errorMessage = stringDuplicate("Failed to read file path");
         return ACTION_FAILURE;
     }
-    clearInputBuffer();
+
+    bufferLength = strlen(buffer);
+    if (bufferLength > 0 && buffer[bufferLength - 1] == '\n') {
+        buffer[bufferLength - 1] = '\0';
+    }
     
     /* check if user wants to go back */
     if (strcmp(buffer, "4") == 0) {
@@ -73,18 +87,25 @@ ActionStatus actionFilePath(AppContext* ctx, void* param) {
 ActionStatus actionConfigMenu(AppContext* ctx, void* param) {
     int choice;
     int* choiceParam = (int*)param;
+    char buffer[256];
     
+    *choiceParam = -1; 
+
     printf("\n==== Configuration Menu ====\n");
     printf("1. Set Resolution (current: %dx%d)\n", ctx->chunkSize, ctx->chunkSize);
     printf("2. Return to Main Menu\n");
     printf("Enter your choice: ");
     
-    if (scanf("%d", &choice) != 1) {
-        clearInputBuffer();
+
+    if (fgets(buffer, sizeof(buffer), stdin) == NULL) {
+        printf("Failed to read input.\n");
+        return ACTION_FAILURE;
+    }
+
+    if (sscanf(buffer, "%d", &choice) != 1) {
         printf("Invalid input. Please enter a number.\n");
         return ACTION_FAILURE;
     }
-    clearInputBuffer();
     
     *choiceParam = choice;
     
@@ -98,15 +119,19 @@ ActionStatus actionConfigMenu(AppContext* ctx, void* param) {
 
 ActionStatus actionResolutionConfig(AppContext* ctx, void* param) {
     int size;
+    char buffer[256];
     printf("\nSet Resolution\n");
     printf("Enter chunk size (3, 5, or 7): ");
     
-    if (scanf("%d", &size) != 1) {
-        clearInputBuffer();
+    if (fgets(buffer, sizeof(buffer), stdin) == NULL) {
+        printf("Failed to read input.\n");
+        return ACTION_FAILURE;
+    }
+
+    if (sscanf(buffer, "%d", &size) != 1) {
         printf("Invalid input. Please enter a number.\n");
         return ACTION_FAILURE;
     }
-    clearInputBuffer();
     
     if (size != 3 && size != 5 && size != 7) {
         printf("Invalid chunk size. Please choose 3, 5, or 7.\n");
@@ -122,20 +147,27 @@ ActionStatus actionResolutionConfig(AppContext* ctx, void* param) {
 
 ActionStatus actionPreviewChoice(AppContext* ctx, void* param) {
     int choice;
+    char buffer[256];
+    int* choiceParam = (int*)param;
+    *choiceParam = -1;
+
     printf("\nPreview of ASCII Art\n");
     printf("1. Adjust settings\n");
     printf("2. Proceed with current result\n");
     printf("3. Quit\n");
     printf("Enter your choice: ");
-    
-    if (scanf("%d", &choice) != 1) {
-        clearInputBuffer();
+
+    if (fgets(buffer, sizeof(buffer), stdin) == NULL) {
+        printf("Failed to read input.\n");
+        return ACTION_FAILURE;
+    }
+
+    if (sscanf(buffer, "%d", &choice) != 1) {
         printf("Invalid input. Please enter a number.\n");
         return ACTION_FAILURE;
     }
-    clearInputBuffer();
-    
-    *(int*)param = choice;
+
+    *choiceParam = choice;
     
     if (choice == 1 || choice == 2 || choice == 3) {
         return ACTION_SUCCESS;
@@ -147,6 +179,10 @@ ActionStatus actionPreviewChoice(AppContext* ctx, void* param) {
 
 ActionStatus actionFinalOutputChoice(AppContext* ctx, void* param) {
     int choice;
+    char buffer[256];
+    int* choiceParam = (int*)param;
+    *choiceParam = -1;
+
     printf("\nOutput Options\n");
     printf("1. Save to file\n");
     printf("2. Display in terminal\n");
@@ -154,14 +190,18 @@ ActionStatus actionFinalOutputChoice(AppContext* ctx, void* param) {
     printf("4. Quit\n");
     printf("Enter your choice: ");
     
-    if (scanf("%d", &choice) != 1) {
-        clearInputBuffer();
+
+    if (fgets(buffer, sizeof(buffer), stdin) == NULL) {
+        printf("Failed to read input.\n");
+        return ACTION_FAILURE;
+    }
+
+    if (sscanf(buffer, "%d", &choice) != 1) {
         printf("Invalid input. Please enter a number.\n");
         return ACTION_FAILURE;
     }
-    clearInputBuffer();
-    
-    *(int*)param = choice;
+
+    *choiceParam = choice;
     
     if (choice >= 1 && choice <= 4) {
         return ACTION_SUCCESS;
@@ -312,25 +352,30 @@ ActionStatus actionDetectEdges(AppContext* ctx, void* param) {
 
 ActionStatus actionChunkImage(AppContext* ctx, void* param) {
     int i;
+    int previousTotalChunks = ctx->allocatedChunks;  /* store previous totalChunks before recomputing */
     if (ctx->edges == NULL) {
         if (ctx->errorMessage) free(ctx->errorMessage);
         ctx->errorMessage = stringDuplicate("No edge data available");
         return ACTION_FAILURE;
     }
-    
+    printf("A\n");
     /* Calculate chunks */
     ctx->chunkRows = ctx->edges->numberRows / ctx->chunkSize;
     ctx->chunkCols = ctx->edges->numberCols / ctx->chunkSize;
-    ctx->totalChunks = ctx->chunkRows * ctx->chunkCols;
-    
+    ctx->allocatedChunks = ctx->chunkRows * ctx->chunkCols;
+
+    printf("Before freeing, chunkRows: %d, chunkCols: %d, totalChunks: %d\n", ctx->chunkRows, ctx->chunkCols, ctx->allocatedChunks);
+
+    printf("B\n");
     if (ctx->chunks != NULL) {
-        for (i = 0; i < ctx->totalChunks; i++) {
+        for (i = 0; i < previousTotalChunks; i++) {
             if (ctx->chunks[i]) freeMatrix(ctx->chunks[i]);
         }
         free(ctx->chunks);
         ctx->chunks = NULL;
     }
     
+    printf("C\n");
     /* Create chunks */
     ctx->chunks = chunkImage(ctx->edges, ctx->chunkSize);
     if (ctx->chunks == NULL) {
@@ -339,6 +384,7 @@ ActionStatus actionChunkImage(AppContext* ctx, void* param) {
         return ACTION_FAILURE;
     }
     
+    printf("D\n");
     return ACTION_SUCCESS;
 }
 
@@ -348,7 +394,7 @@ ActionStatus actionMapToAscii(AppContext* ctx, void* param) {
     int r;
     int c;
     char ascii;
-    if (ctx->chunks == NULL || ctx->totalChunks <= 0) {
+    if (ctx->chunks == NULL || ctx->allocatedChunks <= 0) {
         if (ctx->errorMessage) free(ctx->errorMessage);
         ctx->errorMessage = stringDuplicate("No image chunks available");
         return ACTION_FAILURE;

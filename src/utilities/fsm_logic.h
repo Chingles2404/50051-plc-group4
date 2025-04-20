@@ -82,7 +82,7 @@ typedef struct {
     char* asciiArt;          /* Generated ASCII art string */
     int chunkSize;           /* Resolution setting (3x3, 5x5, etc.) */
     int colorMode;           /* Color output flag */
-    int totalChunks;         /* Total number of chunks */
+    int allocatedChunks;     /* Amount of allocated chunks */
     int chunkRows;           /* Number of chunk rows */
     int chunkCols;           /* Number of chunk columns */
     char* errorMessage;      /* Last error message */

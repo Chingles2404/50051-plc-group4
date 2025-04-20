@@ -255,7 +255,7 @@ void freeAppContext(AppContext* context) {
     if (context->image) freeMatrix(context->image);
     if (context->edges) freeMatrix(context->edges);
     if (context->chunks) {
-        for (i = 0; i < context->totalChunks; i++)
+        for (i = 0; i < context->allocatedChunks; i++)
             if (context->chunks[i]) freeMatrix(context->chunks[i]);
         free(context->chunks);
     }
