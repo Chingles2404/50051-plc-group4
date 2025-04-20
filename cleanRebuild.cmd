@@ -49,13 +49,17 @@ REM Run the program
 if exist %INPUT_BMP% (
     echo Converting image to ASCII art...
     echo ASCII art output will be located at "%OUTPUT_BMP%".
-    %EXE_PATH% %INPUT_BMP%
 
-    if errorlevel 1 (
-        echo Conversion failed.
-    ) else (
-        echo Conversion done.
-    )
+
+    @REM %EXE_PATH% %INPUT_BMP%
+    @REM if errorlevel 1 (
+    @REM     echo Conversion failed.
+    @REM ) else (
+    @REM     echo Conversion done.
+    @REM )
+    
+    
+    %EXE_PATH%
 ) else (
     echo Input BMP file "%INPUT_BMP%" not found.
 )
@@ -63,3 +67,4 @@ if exist %INPUT_BMP% (
 
 @echo off
 endlocal
+exit /b 0

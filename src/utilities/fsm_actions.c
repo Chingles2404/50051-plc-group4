@@ -42,7 +42,7 @@ ActionStatus actionFilePath(AppContext* ctx, void* param) {
         ctx->filename = NULL;
     }
     
-    printf("Enter image file path (or 'back' to return to main menu): ");
+    printf("Enter image file path (or type '4' to return to main menu): ");
     char buffer[256];
     if (scanf("%255s", buffer) != 1) {
         clearInputBuffer();
@@ -53,7 +53,7 @@ ActionStatus actionFilePath(AppContext* ctx, void* param) {
     clearInputBuffer();
     
     /* check if user wants to go back */
-    if (strcmp(buffer, "back") == 0) {
+    if (strcmp(buffer, "4") == 0) {
         *(int*)param = -1; 
         return ACTION_SUCCESS;
     }
@@ -145,6 +145,7 @@ ActionStatus actionPreviewChoice(AppContext* ctx, void* param) {
     printf("\nPreview of ASCII Art\n");
     printf("1. Adjust settings\n");
     printf("2. Proceed with current result\n");
+    printf("3. Quit\n");
     printf("Enter your choice: ");
     
     int choice;
@@ -157,7 +158,7 @@ ActionStatus actionPreviewChoice(AppContext* ctx, void* param) {
     
     *(int*)param = choice;
     
-    if (choice == 1 || choice == 2) {
+    if (choice == 1 || choice == 2 || choice == 3) {
         return ACTION_SUCCESS;
     } else {
         printf("Invalid choice. Please try again.\n");
@@ -170,6 +171,7 @@ ActionStatus actionFinalOutputChoice(AppContext* ctx, void* param) {
     printf("1. Save to file\n");
     printf("2. Display in terminal\n");
     printf("3. Both save and display\n");
+    printf("4. Quit\n");
     printf("Enter your choice: ");
     
     int choice;
@@ -182,7 +184,7 @@ ActionStatus actionFinalOutputChoice(AppContext* ctx, void* param) {
     
     *(int*)param = choice;
     
-    if (choice >= 1 && choice <= 3) {
+    if (choice >= 1 && choice <= 4) {
         return ACTION_SUCCESS;
     } else {
         printf("Invalid choice. Please try again.\n");
@@ -253,7 +255,7 @@ ActionStatus actionParseBitmap(AppContext* ctx, void* param) {
     if (!parseFile(ctx->parser, ctx->filename)) {
         if (ctx->errorMessage) free(ctx->errorMessage);
         ctx->errorMessage = strdup(ctx->parser->error_message ? 
-                                  ctx->parser->error_message : "Unknown parsing error");
+        ctx->parser->error_message : "Unknown parsing error");
         return ACTION_FAILURE;
     }
     
@@ -472,6 +474,7 @@ ActionStatus actionSaveToFile(AppContext* ctx, void* param) {
 
 
 void clearInputBuffer() {
+    // Since only numeric characters are read, this discards all non-numerics
     int c;
     while ((c = getchar()) != '\n' && c != EOF);
 }

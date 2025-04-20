@@ -253,7 +253,6 @@ AppState processState(AppContext* ctx) {
                 return STATE_INPUT_MainMenu;
             }
         } else {
-            return STATE_INPUT_MainMenu;
         }
     }
     
@@ -271,17 +270,49 @@ AppState processState(AppContext* ctx) {
             return transition->failure;
         }
     }
-    
+    /* file path input - handle 'back' command */
+    if (ctx->state == STATE_GOTO_Config) {
+        ActionStatus status = executeAction(transition->action, transition->actionParam, ctx);
+        int choice = *(int*)transition->actionParam;
+        
+        if (status == ACTION_SUCCESS) {
+
+            // printf("1. Set Resolution (current: %dx%d)\n", ctx->chunkSize, ctx->chunkSize);
+            // printf("2. Set Color Mode (current: %s)\n", 
+            //        ctx->colorMode == 0 ? "Grayscale" : "Color");
+            // printf("3. Return to Main Menu\n");
+            switch (choice) {
+                case 1:
+                    return STATE_DISPLAY_Adjust;
+                case 2:
+                    return STATE_DISPLAY_Adjust;
+                case 3:
+                    return STATE_INPUT_MainMenu;
+                default:
+                    printf("Invalid choice. Returning to adjustment menu.\n");
+                    return STATE_VALIDATE_Adjust;
+            }
+        } else {
+        }
+    }
+
     /* validate adjust */
     if (ctx->state == STATE_VALIDATE_Adjust) {
         ActionStatus status = executeAction(transition->action, transition->actionParam, ctx);
         int choice = *(int*)transition->actionParam;
         
         if (status == ACTION_SUCCESS) {
-            if (choice == 1) {
-                return STATE_DISPLAY_Adjust;
-            } else {
-                return STATE_GOTO_FinalPreview;
+
+            switch (choice) {
+                case 1:
+                    return STATE_DISPLAY_Adjust;
+                case 2:
+                    return STATE_GOTO_FinalPreview;
+                case 3:
+                    return STATE_EXIT;
+                default:
+                    printf("Invalid choice. Returning to adjustment menu.\n");
+                    return STATE_VALIDATE_Adjust;
             }
         } else {
             return STATE_VALIDATE_Adjust;
@@ -294,27 +325,29 @@ AppState processState(AppContext* ctx) {
         int choice = *(int*)transition->actionParam;
         
         if (status == ACTION_SUCCESS) {
-            if (choice == 1) {
-                return STATE_OUTPUT_File;
-            } else if (choice == 2) {
-                return STATE_DISPLAY_Terminal;
-            } else if (choice == 3) {
-                /* first save, then display */
-                AppState nextState = STATE_OUTPUT_File;
-                ctx->state = nextState;
-                nextState = processState(ctx);
-                if (nextState == STATE_ERROR_Generic) {
-                    return nextState;
+            
+            switch (choice) {
+                case 1:
+                    return STATE_OUTPUT_File;
+                case 2:
+                    return STATE_DISPLAY_Terminal;
+                case 3: {
+                    /* first save, then display */
+                    AppState nextState = STATE_OUTPUT_File;
+                    ctx->state = nextState;
+                    nextState = processState(ctx);
+                    if (nextState == STATE_ERROR_Generic) {
+                        return nextState;
+                    }
+                    return STATE_DISPLAY_Terminal;
                 }
-                return STATE_DISPLAY_Terminal;
-            } else {
-                return STATE_GOTO_FinalPreview;
+                default:
+                    return STATE_GOTO_FinalPreview;
             }
         } else {
             return STATE_GOTO_FinalPreview;
         }
     }
-    
     ActionStatus status = executeAction(transition->action, transition->actionParam, ctx);
     return (status == ACTION_SUCCESS) ? transition->success : transition->failure;
 }
