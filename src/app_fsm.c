@@ -187,14 +187,14 @@ AppState processState(AppContext* context) {
         int choice = *choiceParam;
         
         if (status == ACTION_SUCCESS) {
-            if (choice == 2) {
-                /* If user came from adjustment, reprocess. Otherwise, return to main. */
-                return (context->resumeAfterConfig) ? STATE_TRANSFORM_Grayscale : STATE_INPUT_MainMenu;
-            } else {
+            if (choice == 1) {
                 return (context->resumeAfterConfig) ? STATE_TRANSFORM_Grayscale : STATE_INPUT_Config;
+            } else if (choice == 2) {
+                return (context->resumeAfterConfig) ? STATE_TRANSFORM_Grayscale : STATE_INPUT_MainMenu;
             }
         }
         return STATE_INPUT_Config;
+        
     }
 
     if (context->state == STATE_VALIDATE_Adjust) {

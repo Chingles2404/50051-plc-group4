@@ -119,10 +119,13 @@ ActionStatus actionConfigMenu(AppContext* ctx, void* param) {
 
 ActionStatus actionResolutionConfig(AppContext* ctx, void* param) {
     int size;
+    int i;
     char buffer[256];
+
     printf("\nSet Resolution\n");
     printf("Enter chunk size (3, 5, or 7): ");
     
+
     if (fgets(buffer, sizeof(buffer), stdin) == NULL) {
         printf("Failed to read input.\n");
         return ACTION_FAILURE;
@@ -132,6 +135,7 @@ ActionStatus actionResolutionConfig(AppContext* ctx, void* param) {
         printf("Invalid input. Please enter a number.\n");
         return ACTION_FAILURE;
     }
+
     
     if (size != 3 && size != 5 && size != 7) {
         printf("Invalid chunk size. Please choose 3, 5, or 7.\n");
@@ -140,7 +144,27 @@ ActionStatus actionResolutionConfig(AppContext* ctx, void* param) {
     
     ctx->chunkSize = size;
     printf("Resolution set to %dx%d\n", size, size);
+
+    /* freeing downstream processed data */
+    if (ctx->chunks != NULL) {
+        for (i = 0; i < ctx->allocatedChunks; i++) {
+            if (ctx->chunks[i]) freeMatrix(ctx->chunks[i]);
+        }
+        free(ctx->chunks);
+        ctx->chunks = NULL;
+    }
+
+    if (ctx->asciiArt != NULL) {
+        free(ctx->asciiArt);
+        ctx->asciiArt = NULL;
+    }
+
+    ctx->chunkRows = 0;
+    ctx->chunkCols = 0;
+    ctx->allocatedChunks = 0;
+
     return ACTION_SUCCESS;
+
 }
 
 
@@ -352,30 +376,24 @@ ActionStatus actionDetectEdges(AppContext* ctx, void* param) {
 
 ActionStatus actionChunkImage(AppContext* ctx, void* param) {
     int i;
-    int previousTotalChunks = ctx->allocatedChunks;  /* store previous totalChunks before recomputing */
     if (ctx->edges == NULL) {
         if (ctx->errorMessage) free(ctx->errorMessage);
         ctx->errorMessage = stringDuplicate("No edge data available");
         return ACTION_FAILURE;
     }
-    printf("A\n");
     /* Calculate chunks */
     ctx->chunkRows = ctx->edges->numberRows / ctx->chunkSize;
     ctx->chunkCols = ctx->edges->numberCols / ctx->chunkSize;
     ctx->allocatedChunks = ctx->chunkRows * ctx->chunkCols;
 
-    printf("Before freeing, chunkRows: %d, chunkCols: %d, totalChunks: %d\n", ctx->chunkRows, ctx->chunkCols, ctx->allocatedChunks);
-
-    printf("B\n");
     if (ctx->chunks != NULL) {
-        for (i = 0; i < previousTotalChunks; i++) {
+        for (i = 0; i < ctx->allocatedChunks; i++) {
             if (ctx->chunks[i]) freeMatrix(ctx->chunks[i]);
         }
         free(ctx->chunks);
         ctx->chunks = NULL;
     }
     
-    printf("C\n");
     /* Create chunks */
     ctx->chunks = chunkImage(ctx->edges, ctx->chunkSize);
     if (ctx->chunks == NULL) {
@@ -384,7 +402,6 @@ ActionStatus actionChunkImage(AppContext* ctx, void* param) {
         return ACTION_FAILURE;
     }
     
-    printf("D\n");
     return ACTION_SUCCESS;
 }
 
