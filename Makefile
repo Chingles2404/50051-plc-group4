@@ -5,6 +5,7 @@ COMPILER_FLAGS = -std=c99 -Wall -Werror -ansi -pedantic \
 	-I./src \
 	-I./src/utilities \
 	-I./src/ascii \
+	-I./src/fsm \
 	-I./src/edge_detection \
 	-I./src/process_bitmap \
 	-I./tests/utilities \
@@ -18,7 +19,7 @@ UNIT_TEST_SOURCE_DIRECTORY = tests
 APPLICATION_SOURCE_FILES = \
 	$(APPLICATION_SOURCE_DIRECTORY)/main.c \
 	$(APPLICATION_SOURCE_DIRECTORY)/app_fsm.c \
-	$(APPLICATION_SOURCE_DIRECTORY)/utilities/fsm_actions.c \
+	$(APPLICATION_SOURCE_DIRECTORY)/fsm/fsm_actions.c \
 	$(APPLICATION_SOURCE_DIRECTORY)/utilities/matrices.c \
 	$(APPLICATION_SOURCE_DIRECTORY)/ascii/ascii.c \
 	$(APPLICATION_SOURCE_DIRECTORY)/edge_detection/edge_detection.c \

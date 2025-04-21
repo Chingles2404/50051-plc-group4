@@ -134,7 +134,7 @@ void test_create_and_free_padded_matrix() {
 
     assert(paddedM->numberRows == m->numberRows + paddingAmount*2);
     assert(paddedM->numberCols == m->numberCols + paddingAmount*2);
-    assert(paddedM->size = paddedM->numberRows * paddedM->numberCols);
+    assert(paddedM->size == paddedM->numberRows * paddedM->numberCols);
 
     /* Top left of padded matrix */
     assert(getMatrixElement(paddedM, 0, 0) == 0);
